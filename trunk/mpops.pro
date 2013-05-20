@@ -16,7 +16,8 @@ SOURCES += main.cc \
     saveandclosejob.cc \
     cropjob.cc \
     openjob.cc \
-    cinelerratoc.cc
+    cinelerratoc.cc \
+    blueboxjob.cc
 HEADERS += opqueue.h \
     job.h \
     controller.h \
@@ -24,4 +25,5 @@ HEADERS += opqueue.h \
     saveandclosejob.h \
     cropjob.h \
     openjob.h \
-    cinelerratoc.h
+    cinelerratoc.h \
+    blueboxjob.h

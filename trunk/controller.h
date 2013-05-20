@@ -28,9 +28,17 @@ typedef struct sArgs
   bool            printHelp;
   bool            withToc;    // Create Cinelerra-TOC
 
+  // --add-alpha
+  bool            withAlpha;
+  int             alphaHue;
+  int             alphaHueTolerance;
+
+  // --color-picker
+  QPoint          colorPickerPixel;
+
   sArgs() : withResize(false), withCropFrom(false), withCropTo(false),
             threadCount(QThread::idealThreadCount()),
-            printHelp(false), withToc(false) {};
+            printHelp(false), withToc(false), withAlpha(false) {};
 } Args;
 
 //---------------------------------------------------------------
