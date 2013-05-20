@@ -8,6 +8,7 @@
 #include "openjob.h"
 #include "cropjob.h"
 #include "resizejob.h"
+#include "blueboxjob.h"
 #include "saveandclosejob.h"
 
 //---------------------------------------------------------------
@@ -56,7 +57,7 @@ void Controller::queueChanged(OpQueue *queue)
     std::cout << "starting " << (mCurrentIndex+1) << "/" << mFilenames.count() << std::endl;
 
     // Loading:
-    queue->addJob(new OpenJob(img,fromFileName));
+    queue->addJob(new OpenJob(img,fromFileName,mArgs.colorPickerPixel));
 
     // Crop-Operation:
     if (mArgs.withCropFrom) {
@@ -76,6 +77,10 @@ void Controller::queueChanged(OpQueue *queue)
     // Resize-Operation
     if (mArgs.withResize)
         queue->addJob(new ResizeJob(img,mArgs.toSize));
+
+    // Bluebox-Operation (add-alpha)
+    if (mArgs.withAlpha)
+        queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
 
     // Store-Operation:
     QString toFileName = fromFileName;

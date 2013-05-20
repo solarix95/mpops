@@ -140,6 +140,18 @@ static void s_parse_args(Args &args)
       args.outDir = argValue;
     } else if (s_parse_arg(nextArg,"format",argValue)) {
       args.format = argValue;
+    } else if (s_parse_arg(nextArg,"add-alpha",argValue)) {
+      QList<QString> parts = argValue.split(",");
+      if (parts.count() == 2) {
+        args.withAlpha = true;
+        args.alphaHue  = parts[0].toInt();
+        args.alphaHueTolerance = parts[1].toInt();
+      }
+    } else if (s_parse_arg(nextArg,"color-picker",argValue)) {
+      QList<QString> parts = argValue.split("+");
+      if (parts.count() == 2) {
+        args.colorPickerPixel = QPoint(parts[0].toInt(),parts[1].toInt());
+      }
     } else if (nextArg == "--create-toc") {
       args.withToc = true;
     } else if ((nextArg == "--help") || (nextArg == "-h") || (nextArg == "-?")) {
