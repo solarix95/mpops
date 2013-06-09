@@ -2,8 +2,9 @@
 #include <QColor>
 #include <QString>
 #include <iostream>
+
 //---------------------------------------------------------------
-OpenJob::OpenJob(QImage *img, const QString &fromFilename, const QPoint &colorPicker)
+OpenJob::OpenJob(ImagePtr img, const QString &fromFilename, const QPoint &colorPicker)
 {
   mImg            = img;
   mFromFilename   = fromFilename;
@@ -13,11 +14,12 @@ OpenJob::OpenJob(QImage *img, const QString &fromFilename, const QPoint &colorPi
 //---------------------------------------------------------------
 void OpenJob::run()
 {
-  mImg->load(mFromFilename);
+  mImg->lock();
+  mImg->img()->load(mFromFilename);
 
   // Do the Color-Picker-Job:
-  if (!mImg->isNull() && (!mColorPickerPos.isNull())) {
-    QColor pixelColor = mImg->pixel(mColorPickerPos);
+  if (!mImg->img()->isNull() && (!mColorPickerPos.isNull())) {
+    QColor pixelColor = mImg->img()->pixel(mColorPickerPos);
     std::cout << "Color Picker: " << mFromFilename.toAscii().data() << std::endl;
     std::cout << " R-G-B-A: " <<  pixelColor.red()   << "-" <<
                                   pixelColor.green() << "-" <<
@@ -27,4 +29,6 @@ void OpenJob::run()
                                   pixelColor.value() << "-" <<
                                   pixelColor.saturation() << std::endl << std::endl;
   }
+
+  mImg->unlock();
 }

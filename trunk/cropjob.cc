@@ -2,7 +2,7 @@
 #include <QDebug>
 
 //---------------------------------------------------------------
-CropJob::CropJob(QImage *img, const QRect &rect)
+CropJob::CropJob(ImagePtr img, const QRect &rect)
 {
   mImg  = img;
   mRect = rect;
@@ -11,5 +11,7 @@ CropJob::CropJob(QImage *img, const QRect &rect)
 //---------------------------------------------------------------
 void CropJob::run()
 {
-  *mImg = mImg->copy(mRect);
+  mImg->lock();
+  *(mImg->img()) = mImg->img()->copy(mRect);
+  mImg->unlock();
 }

@@ -17,7 +17,9 @@ SOURCES += main.cc \
     cropjob.cc \
     openjob.cc \
     cinelerratoc.cc \
-    blueboxjob.cc
+    blueboxjob.cc \
+    tweeningavg.cc \
+    image.cc
 HEADERS += opqueue.h \
     job.h \
     controller.h \
@@ -26,4 +28,6 @@ HEADERS += opqueue.h \
     cropjob.h \
     openjob.h \
     cinelerratoc.h \
-    blueboxjob.h
+    blueboxjob.h \
+    tweeningavg.h \
+    image.h

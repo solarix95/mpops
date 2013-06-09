@@ -10,6 +10,7 @@
 #include "resizejob.h"
 #include "blueboxjob.h"
 #include "saveandclosejob.h"
+#include "tweeningavg.h"
 
 //---------------------------------------------------------------
 #define SCALE(a,b,imfFactor)  ((a) + (imgFactor*((b)-(a))))
@@ -20,6 +21,7 @@ Controller::Controller(const Args &args, QObject *parent) :
 {
   mArgs = args;
   expandFilenames();
+  mJobIndex = 1;
 }
 
 //---------------------------------------------------------------
@@ -53,7 +55,9 @@ bool Controller::run()
 void Controller::queueChanged(OpQueue *queue)
 {
   if ((queue->jobCount() == 0) && (mCurrentIndex < mFilenames.count())) {
-    QImage *img = new QImage;
+    ImagePtr img(new Image(new QImage));
+    bool     withTweens = !mArgs.tweening.isEmpty() && (mCurrentIndex > 0);
+
     QString fromFileName = mFilenames[mCurrentIndex];
     std::cout << "starting " << (mCurrentIndex+1) << "/" << mFilenames.count() << std::endl;
 
@@ -84,17 +88,23 @@ void Controller::queueChanged(OpQueue *queue)
         queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
 
     // Store-Operation:
-    QString toFileName = mArgs.outfileTemplate.isEmpty() ? fromFileName : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),mCurrentIndex+1);
-    if (!mArgs.outDir.isEmpty())
-      toFileName = mArgs.outDir + QDir::separator() + toFileName;
-    if (!mArgs.format.isEmpty()) // replace extension:
-      toFileName = toFileName.left(toFileName.indexOf(".")+1) + mArgs.format;
+    QString toFileName = createFileName(fromFileName, withTweens ? mJobIndex+1 : mJobIndex);
 
     queue->addJob(new SaveAndCloseJob(img,toFileName));
     QDir dir;
     mToc.appendImage(dir.absoluteFilePath(toFileName));
 
+    if (withTweens && (mArgs.tweening == "avg")) {
+      Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
+      ImagePtr out(new Image(new QImage()));
+      queue->addJob(new TweeningAvg(mLastImage,img,out));
+      QString tweenFileName = createFileName(fromFileName,mJobIndex);
+      queue->addJob(new SaveAndCloseJob(out,tweenFileName));
+      mJobIndex++;
+    }
     mCurrentIndex++;
+    mJobIndex++;
+    mLastImage = img;
   }
 
 
@@ -144,5 +154,16 @@ void Controller::expandFilenames()
     mFilenames = mArgs.fileList;
   }
   std::cout << "todo: " << mFilenames.count() << " images" << std::endl;
+}
 
+//---------------------------------------------------------------
+QString Controller::createFileName(const QString originalFileName, int frameIndex)
+{
+  QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileName : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
+  if (!mArgs.outDir.isEmpty())
+    toFileName = mArgs.outDir + QDir::separator() + toFileName;
+  if (!mArgs.format.isEmpty()) // replace extension:
+    toFileName = toFileName.left(toFileName.indexOf(".")+1) + mArgs.format;
+
+  return toFileName;
 }

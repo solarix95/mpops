@@ -2,7 +2,7 @@
 #include <QColor>
 
 //---------------------------------------------------------------
-BlueboxJob::BlueboxJob(QImage *img, int hue, int tolerance)
+BlueboxJob::BlueboxJob(ImagePtr img, int hue, int tolerance)
 {
   mImg         = img;
   mHue         = hue;
@@ -12,27 +12,31 @@ BlueboxJob::BlueboxJob(QImage *img, int hue, int tolerance)
 //---------------------------------------------------------------
 void BlueboxJob::run()
 {
-  if (mImg->isNull()) {
+  mImg->lock();
+  QImage *img = mImg->img();
+
+  if (img->isNull()) {
+    mImg->unlock();
     return;
   }
 
   // QImage alphaMask(mImg->width(), mImg->height(), );
-  if (mImg->format() != QImage::Format_ARGB32)
-    *mImg = mImg->convertToFormat(QImage::Format_ARGB32);
-  Q_ASSERT(mImg->hasAlphaChannel());
+  if (img->format() != QImage::Format_ARGB32)
+    *img = mImg->img()->convertToFormat(QImage::Format_ARGB32);
+  Q_ASSERT(mImg->img()->hasAlphaChannel());
 
-  for (int x=0; x<mImg->width(); x++) {
-    for (int y=0; y<mImg->height(); y++) {
-      QColor pixelColor = mImg->pixel(x,y);
+  for (int x=0; x<img->width(); x++) {
+    for (int y=0; y<img->height(); y++) {
+      QColor pixelColor = img->pixel(x,y);
       int distance = abs(pixelColor.hue() - mHue);
       if (distance <= mTolerance) {
-        QColor newColor = mImg->pixel(x,y);
+        QColor newColor = img->pixel(x,y);
         newColor.setAlpha(255*(distance/(double)mTolerance));
-        mImg->setPixel(x,y,newColor.rgba());
+        img->setPixel(x,y,newColor.rgba());
       }
     }
   }
 
-
+  mImg->unlock();
 }
 
