@@ -7,14 +7,14 @@
 class BlueboxJob : public Job
 {
   public:
-    BlueboxJob(QImage *img, int hue, int tolerance);
+    BlueboxJob(ImagePtr img, int hue, int tolerance);
 
     virtual void run();
 
   private:
-    QImage *mImg;
-    int     mHue;
-    int     mTolerance;
+    ImagePtr  mImg;
+    int       mHue;
+    int       mTolerance;
 };
 
 #endif // BLUEBOXJOB_H

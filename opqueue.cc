@@ -34,12 +34,15 @@ void OpQueue::runJobs()
   ncThis()->mJobMutex.lock();
   Job *job = NULL;
   if (!mJobQueue.isEmpty())
-    job = mJobQueue.takeFirst();
+    job = mJobQueue[0];
   ncThis()->mJobMutex.unlock();
 
   if (job) {
     job->run();
-    delete job;
+
+    ncThis()->mJobMutex.lock();
+    delete mJobQueue.takeFirst();
+    ncThis()->mJobMutex.unlock();
     emit queueChanged(this);
   }
 }

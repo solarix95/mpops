@@ -2,7 +2,7 @@
 #include <QDebug>
 
 //---------------------------------------------------------------
-SaveAndCloseJob::SaveAndCloseJob(QImage *img, const QString &toFilename)
+SaveAndCloseJob::SaveAndCloseJob(ImagePtr img, const QString &toFilename)
 {
   mImg        = img;
   mToFilename = toFilename;
@@ -11,12 +11,13 @@ SaveAndCloseJob::SaveAndCloseJob(QImage *img, const QString &toFilename)
 //---------------------------------------------------------------
 void SaveAndCloseJob::run()
 {
-  if (mImg->isNull()) {
-    delete mImg;
-    return;
+  mImg->lock();
+
+  if (!mImg->img()->isNull()) {
+    bool done = mImg->img()->save(mToFilename, 0, 99);
+    Q_ASSERT(done);
   }
 
-  bool done = mImg->save(mToFilename, 0, 99);
-  Q_ASSERT(done);
-  delete mImg;
+  mImg->setAllJobsDone();
+  mImg->unlock();
 }

@@ -26,6 +26,7 @@ typedef struct sArgs
   QString         outDir;
   QString         format;
   QString         outfileTemplate;
+  QString         tweening;
   bool            printHelp;
   bool            withToc;    // Create Cinelerra-TOC
 
@@ -60,13 +61,16 @@ private slots:
     void queueChanged(OpQueue*);
 
 private:
-    void expandFilenames();
+    void    expandFilenames();
+    QString createFileName(const QString originalFileName, int frameIndex);
 
     Args            mArgs;
     QList<QString>  mFilenames;
     int             mCurrentIndex;
+    int             mJobIndex;
     QList<OpQueue*> mThreads;
     CinelerraToc    mToc;
+    ImagePtr        mLastImage;
 };
 
 #endif // CONTROLLER_H

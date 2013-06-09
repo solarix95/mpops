@@ -2,7 +2,7 @@
 #include <QDebug>
 
 //---------------------------------------------------------------
-ResizeJob::ResizeJob(QImage *img, const QSize &size)
+ResizeJob::ResizeJob(ImagePtr img, const QSize &size)
 {
   mImg  = img;
   mSize = size;
@@ -11,8 +11,10 @@ ResizeJob::ResizeJob(QImage *img, const QSize &size)
 //---------------------------------------------------------------
 void ResizeJob::run()
 {
-  if (mImg->size() == mSize)
-    return;
+  mImg->lock();
 
-  *mImg = mImg->scaled(mSize,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+  if (mImg->img()->size() != mSize)
+    *(mImg->img()) = mImg->img()->scaled(mSize,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+
+  mImg->unlock();
 }

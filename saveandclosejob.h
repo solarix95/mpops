@@ -7,13 +7,13 @@
 class SaveAndCloseJob : public Job
 {
 public:
-    SaveAndCloseJob(QImage *img, const QString &toFileName);
+    SaveAndCloseJob(ImagePtr img, const QString &toFileName);
 
     virtual void run();
 
 private:
-    QImage *mImg;
-    QString mToFilename;
+    ImagePtr  mImg;
+    QString   mToFilename;
 };
 
 #endif // SAVEANDCLOSEJOB_H

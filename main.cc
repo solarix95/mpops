@@ -24,6 +24,7 @@ static void s_print_help()
   std::cout << "  --resize=size       : widthxheight"                << std::endl;
   std::cout << "  --out=subdir"                                      << std::endl;
   std::cout << "  --format=ext"                                      << std::endl;
+  std::cout << "  --tweening=strategy"                               << std::endl;
   std::cout << "  --rename=filename-template (sprintf)"              << std::endl;
   std::cout << "  --threads=count     : default: cpu-count)"         << std::endl;
   std::cout << "  --create-toc        : creates cinelerra-toc"       << std::endl;
@@ -32,6 +33,10 @@ static void s_print_help()
 
   foreach(QByteArray format, QImageReader::supportedImageFormats())
     std::cout << " " << format.data() << std::endl;
+
+  std::cout << std::endl;
+  std::cout << "supported tweening-strategies: "                   << std::endl;
+  std::cout << " " << "avg            : average"                   << std::endl;
 
   std::cout << std::endl;
   std::cout << "examples:"                                            << std::endl;
@@ -125,6 +130,16 @@ static void s_validate_args(const Args &args)
     std::cout << std::endl << "ERROR: '--format' cannot be used with '--rename'!" << std::endl;
     exit(-1);
   }
+
+  if (!args.tweening.isEmpty() && (args.tweening != "avg")) {
+    std::cout << std::endl << "ERROR: invalid tweening strategy" << std::endl;
+    exit(-1);
+  }
+
+  if (!args.tweening.isEmpty() && args.outfileTemplate.isEmpty()) {
+    std::cout << std::endl << "ERROR:  tweening only with '--rename'" << std::endl;
+    exit(-1);
+  }
 }
 
 //---------------------------------------------------------------
@@ -150,8 +165,10 @@ static void s_parse_args(Args &args)
     } else if (s_parse_arg(nextArg,"out",argValue)) {
       args.outDir = argValue;
     } else if (s_parse_arg(nextArg,"format",argValue)) {
-      args.format = argValue;
-    } else if (s_parse_arg(nextArg,"rename",argValue)) {
+      args.format = argValue; 
+    } else if (s_parse_arg(nextArg,"tweening",argValue)) {
+      args.tweening = argValue;
+    }else if (s_parse_arg(nextArg,"rename",argValue)) {
       args.outfileTemplate = argValue;
     }else if (s_parse_arg(nextArg,"add-alpha",argValue)) {
       QList<QString> parts = argValue.split(",");
