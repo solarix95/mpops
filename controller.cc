@@ -29,6 +29,7 @@ bool Controller::run()
     return false;
   }
 
+  Q_ASSERT(mThreads.isEmpty());
   for (int i=0; i<mArgs.threadCount; i++) {
     mThreads << new OpQueue();
     mThreads.last()->start();
@@ -83,7 +84,7 @@ void Controller::queueChanged(OpQueue *queue)
         queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
 
     // Store-Operation:
-    QString toFileName = fromFileName;
+    QString toFileName = mArgs.outfileTemplate.isEmpty() ? fromFileName : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),mCurrentIndex+1);
     if (!mArgs.outDir.isEmpty())
       toFileName = mArgs.outDir + QDir::separator() + toFileName;
     if (!mArgs.format.isEmpty()) // replace extension:

@@ -24,6 +24,7 @@ static void s_print_help()
   std::cout << "  --resize=size       : widthxheight"                << std::endl;
   std::cout << "  --out=subdir"                                      << std::endl;
   std::cout << "  --format=ext"                                      << std::endl;
+  std::cout << "  --rename=filename-template (sprintf)"              << std::endl;
   std::cout << "  --threads=count     : default: cpu-count)"         << std::endl;
   std::cout << "  --create-toc        : creates cinelerra-toc"       << std::endl;
   std::cout << std::endl;
@@ -33,11 +34,12 @@ static void s_print_help()
     std::cout << " " << format.data() << std::endl;
 
   std::cout << std::endl;
-  std::cout << "examples:"                                           << std::endl;
-  std::cout << "  mpops --resize=800x600 *.jpg"                      << std::endl;
-  std::cout << "  mpops --resize=800x600 img_1.jpg img_2.jpg"        << std::endl;
-  std::cout << "  mpops --resize=800x600 img_%d.jpg"                 << std::endl;
-  std::cout << "  mpops --format=png --out=converted *.jpg"          << std::endl;
+  std::cout << "examples:"                                            << std::endl;
+  std::cout << "  mpops --resize=800x600 *.jpg"                       << std::endl;
+  std::cout << "  mpops --resize=800x600 *.jpg --rename=frame_%d.jpg" << std::endl;
+  std::cout << "  mpops --resize=800x600 img_1.jpg img_2.jpg"         << std::endl;
+  std::cout << "  mpops --resize=800x600 img_%d.jpg"                  << std::endl;
+  std::cout << "  mpops --format=png --out=converted *.jpg"           << std::endl;
   std::cout << "  mpops --crop-from=800x600+10+10 --crop-to=80x60 --resize=80x60 *.jpg" << std::endl;
 
   std::cout << std::endl;
@@ -109,10 +111,19 @@ static void s_validate_args(const Args &args)
       std::cout << std::endl << "ERROR: TOC only with resize-option!" << std::endl;
       exit(-1);
     }
-    if (args.format != "png") {
+    if (!args.outfileTemplate.isEmpty() &&  !args.outfileTemplate.endsWith(".png")) {
+      std::cout << std::endl << "ERROR: TOC only in 'png'-format (--rename=<template>.png)" << std::endl;
+      exit(-1);
+    }
+    if (args.outfileTemplate.isEmpty() && (args.format != "png")) {
       std::cout << std::endl << "ERROR: TOC only with '--format=png' option!" << std::endl;
       exit(-1);
     }
+  }
+
+  if (!args.outfileTemplate.isEmpty() && !args.format.isEmpty()) {
+    std::cout << std::endl << "ERROR: '--format' cannot be used with '--rename'!" << std::endl;
+    exit(-1);
   }
 }
 
@@ -140,7 +151,9 @@ static void s_parse_args(Args &args)
       args.outDir = argValue;
     } else if (s_parse_arg(nextArg,"format",argValue)) {
       args.format = argValue;
-    } else if (s_parse_arg(nextArg,"add-alpha",argValue)) {
+    } else if (s_parse_arg(nextArg,"rename",argValue)) {
+      args.outfileTemplate = argValue;
+    }else if (s_parse_arg(nextArg,"add-alpha",argValue)) {
       QList<QString> parts = argValue.split(",");
       if (parts.count() == 2) {
         args.withAlpha = true;

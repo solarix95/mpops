@@ -25,6 +25,7 @@ typedef struct sArgs
 
   QString         outDir;
   QString         format;
+  QString         outfileTemplate;
   bool            printHelp;
   bool            withToc;    // Create Cinelerra-TOC
 
@@ -66,7 +67,6 @@ private:
     int             mCurrentIndex;
     QList<OpQueue*> mThreads;
     CinelerraToc    mToc;
-
 };
 
 #endif // CONTROLLER_H
