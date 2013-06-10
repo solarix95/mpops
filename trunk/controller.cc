@@ -159,7 +159,11 @@ void Controller::expandFilenames()
 //---------------------------------------------------------------
 QString Controller::createFileName(const QString originalFileName, int frameIndex)
 {
-  QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileName : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
+  QString originalFileNameWithoutPath = originalFileName;
+  while (originalFileNameWithoutPath.indexOf(QDir::separator()) >= 0)
+    originalFileNameWithoutPath.remove(0,originalFileNameWithoutPath.indexOf(QDir::separator()) + 1);
+    
+  QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileNameWithoutPath : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
   if (!mArgs.outDir.isEmpty())
     toFileName = mArgs.outDir + QDir::separator() + toFileName;
   if (!mArgs.format.isEmpty()) // replace extension:
