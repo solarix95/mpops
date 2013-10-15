@@ -6,6 +6,7 @@ TARGET =
 DEPENDPATH += .
 INCLUDEPATH += .
 CONFIG += debug
+QT += gui
 
 # Input
 SOURCES += main.cc \
