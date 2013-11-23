@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QImageReader>
 #include "controller.h"
+#include "geometrypicker.h"
 
 #define VERSION "0.1.0"
 
@@ -55,23 +56,29 @@ static void s_print_help()
 //---------------------------------------------------------------
 static bool s_parse_geometry(const QString &value, QRect &rect) // "widthxheight+x+y", "1024x768+10+20"
 {
-  QList<QString> position = value.split("+");
+    if (value == "pick") {
+        rect.setWidth(-1);
+        rect.setHeight(-1);
+        return true;
+    } else {
+        QList<QString> position = value.split("+");
 
-  if ((position.count() == 3) || (position.count() == 1)) { // with or without x/y-position
-    QList<QString> dimension = position.takeFirst().split("x");
-    if (dimension.count() == 2) {
-      rect = QRect();
-      if (position.count() == 2) {       // Position is optional..
-        rect.setX(position[0].toInt());
-        rect.setY(position[1].toInt());
-      }
+        if ((position.count() == 3) || (position.count() == 1)) { // with or without x/y-position
+            QList<QString> dimension = position.takeFirst().split("x");
+            if (dimension.count() == 2) {
+                rect = QRect();
+                if (position.count() == 2) {       // Position is optional..
+                    rect.setX(position[0].toInt());
+                    rect.setY(position[1].toInt());
+                }
 
-      rect.setWidth(dimension[0].toInt());
-      rect.setHeight(dimension[1].toInt());
-      return true;
+                rect.setWidth(dimension[0].toInt());
+                rect.setHeight(dimension[1].toInt());
+                return true;
+            }
+        }
     }
-  }
-  return false;
+    return false;
 }
 
 //---------------------------------------------------------------

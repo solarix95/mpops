@@ -20,7 +20,9 @@ SOURCES += main.cc \
     cinelerratoc.cc \
     blueboxjob.cc \
     tweeningavg.cc \
-    image.cc
+    image.cc \
+    geometrypicker.cc \
+    imageview.cc
 HEADERS += opqueue.h \
     job.h \
     controller.h \
@@ -31,4 +33,8 @@ HEADERS += opqueue.h \
     cinelerratoc.h \
     blueboxjob.h \
     tweeningavg.h \
-    image.h
+    image.h \
+    geometrypicker.h \
+    imageview.h
+
+FORMS += forms/geometrypicker.ui
