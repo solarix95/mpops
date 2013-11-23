@@ -11,6 +11,7 @@
 #include "blueboxjob.h"
 #include "saveandclosejob.h"
 #include "tweeningavg.h"
+#include "geometrypicker.h"
 
 //---------------------------------------------------------------
 #define SCALE(a,b,imfFactor)  ((a) + (imgFactor*((b)-(a))))
@@ -21,6 +22,7 @@ Controller::Controller(const Args &args, QObject *parent) :
 {
   mArgs = args;
   expandFilenames();
+  pickGeometry();
   mJobIndex = 1;
 }
 
@@ -154,6 +156,21 @@ void Controller::expandFilenames()
     mFilenames = mArgs.fileList;
   }
   std::cout << "todo: " << mFilenames.count() << " images" << std::endl;
+}
+
+//---------------------------------------------------------------
+void Controller::pickGeometry()
+{
+    if (mFilenames.isEmpty())
+        return;
+
+     if (mArgs.withCropFrom && mArgs.fromRect.width() <= 0) {
+         if (QFile::exists(mFilenames.first())) {
+             QImage img(mFilenames.first());
+             GeometryPicker picker(&img);
+             picker.exec();
+         }
+     }
 }
 
 //---------------------------------------------------------------
