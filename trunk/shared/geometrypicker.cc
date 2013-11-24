@@ -1,12 +1,14 @@
 #include "geometrypicker.h"
 
 //---------------------------------------------------------------
-GeometryPicker::GeometryPicker(QImage *img, QWidget *parent) :
+GeometryPicker::GeometryPicker(QImage *img, const QString &title, QWidget *parent) :
     QDialog(parent)
 {
     ui.setupUi(this);
     ui.imageFrame->layout()->addWidget(&mImageView);
     mImg = img;
+    if (!title.isEmpty())
+        setWindowTitle(title);
     connect(&mImageView, SIGNAL(selection(QRect)), this, SLOT(newSelection(QRect)));
     connect(ui.edtX, SIGNAL(editingFinished()), this, SLOT(edited()));
     connect(ui.edtY, SIGNAL(editingFinished()), this, SLOT(edited()));

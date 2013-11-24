@@ -11,7 +11,7 @@
 #include "blueboxjob.h"
 #include "saveandclosejob.h"
 #include "tweeningavg.h"
-#include "geometrypicker.h"
+#include "shared/geometrypicker.h"
 
 //---------------------------------------------------------------
 #define SCALE(a,b,imfFactor)  ((a) + (imgFactor*((b)-(a))))
@@ -22,7 +22,6 @@ Controller::Controller(const Args &args, QObject *parent) :
 {
   mArgs = args;
   expandFilenames();
-  pickGeometry();
   mJobIndex = 1;
 }
 
@@ -32,6 +31,9 @@ bool Controller::run()
   if (mFilenames.isEmpty()) { // Nothing to be done
     return false;
   }
+
+  if (!pickGeometry())
+      return false;
 
   Q_ASSERT(mThreads.isEmpty());
   for (int i=0; i<mArgs.threadCount; i++) {
@@ -159,18 +161,28 @@ void Controller::expandFilenames()
 }
 
 //---------------------------------------------------------------
-void Controller::pickGeometry()
+bool Controller::pickGeometry()
 {
-    if (mFilenames.isEmpty())
-        return;
+    if (mFilenames.isEmpty() || !QFile::exists(mFilenames.first()))
+        return true;
 
-     if (mArgs.withCropFrom && mArgs.fromRect.width() <= 0) {
-         if (QFile::exists(mFilenames.first())) {
-             QImage img(mFilenames.first());
-             GeometryPicker picker(&img);
-             picker.exec();
-         }
-     }
+    QImage img(mFilenames.first());
+    if (img.isNull())
+        return false;
+
+    if (mArgs.withCropFrom && mArgs.fromRect.width() <= 0) {
+        GeometryPicker picker(&img,"pick 'from-crop'");
+        if (!picker.exec())
+            return false;
+        mArgs.fromRect = picker.selection();
+    }
+    if (mArgs.withCropTo && mArgs.toRect.width() <= 0) {
+        GeometryPicker picker(&img,"pick 'to-crop'");
+        if (!picker.exec())
+            return false;
+        mArgs.toRect = picker.selection();
+    }
+    return true;
 }
 
 //---------------------------------------------------------------

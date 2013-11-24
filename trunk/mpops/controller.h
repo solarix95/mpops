@@ -62,7 +62,7 @@ private slots:
 
 private:
     void    expandFilenames();
-    void    pickGeometry();
+    bool    pickGeometry();
     QString createFileName(const QString originalFileName, int frameIndex);
 
     Args            mArgs;
