@@ -8,6 +8,8 @@ INCLUDEPATH += .
 CONFIG += debug
 QT += gui
 
+include(../shared/shared.pro)
+
 # Input
 SOURCES += main.cc \
     opqueue.cc \
@@ -20,9 +22,8 @@ SOURCES += main.cc \
     cinelerratoc.cc \
     blueboxjob.cc \
     tweeningavg.cc \
-    image.cc \
-    geometrypicker.cc \
-    imageview.cc
+    image.cc
+
 HEADERS += opqueue.h \
     job.h \
     controller.h \
@@ -33,8 +34,5 @@ HEADERS += opqueue.h \
     cinelerratoc.h \
     blueboxjob.h \
     tweeningavg.h \
-    image.h \
-    geometrypicker.h \
-    imageview.h
+    image.h
 
-FORMS += forms/geometrypicker.ui

@@ -10,7 +10,7 @@ class GeometryPicker : public QDialog
 {
     Q_OBJECT
 public:
-    explicit GeometryPicker(QImage *img = NULL,QWidget *parent = 0);
+    explicit GeometryPicker(QImage *img,const QString &title, QWidget *parent = 0);
     
     QRect selection() const;
 

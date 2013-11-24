@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QResizeEvent>
 #include <QMouseEvent>
+#include <QApplication>
 #include "imageview.h"
 #include <QDebug>
 
@@ -83,7 +84,9 @@ void ImageView::resizeEvent(QResizeEvent *e)
         return;
     mWidSel.setWidth(0);
     mWidSel.setHeight(0);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     mScaledImage = mOriginalImg->scaled(e->size(),Qt::KeepAspectRatio);
+    QApplication::restoreOverrideCursor();
 }
 
 //---------------------------------------------------------------
@@ -115,7 +118,9 @@ void ImageView::setImage(const QImage *img)
     mScaledImage = QImage();
     if (!mOriginalImg)
         return;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     mScaledImage = mOriginalImg->scaled(size(),Qt::KeepAspectRatio);
+    QApplication::restoreOverrideCursor();
 }
 
 //---------------------------------------------------------------
@@ -191,10 +196,10 @@ QRect ImageView::movingRect() const
         topLeft.setX(0);
     if (topLeft.y() < 0)
         topLeft.setY(0);
-    int borderX = width()-1 - (topLeft.x()+moveRect.width());
+    int borderX = mScaledImage.width()-1 - (topLeft.x()+moveRect.width());
     if (borderX < 0)
         topLeft.setX(topLeft.x() + borderX);
-    int borderY = height()-1 - (topLeft.y()+moveRect.height());
+    int borderY = mScaledImage.height()-1 - (topLeft.y()+moveRect.height());
     if (borderY < 0)
         topLeft.setY(topLeft.y() + borderY);
 

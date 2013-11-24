@@ -10,7 +10,7 @@
 #include <QDebug>
 #include <QImageReader>
 #include "controller.h"
-#include "geometrypicker.h"
+#include "shared/geometrypicker.h"
 
 #define VERSION "0.1.0"
 
