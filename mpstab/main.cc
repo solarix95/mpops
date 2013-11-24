@@ -16,18 +16,32 @@
 
 
 #define VERSION "0.1.0"
+#define TO_STDSTRING(x)  x.toAscii().data()
 
+//---------------------------------------------------------------
+typedef struct JobData_
+{
+  QString         imgName;
+  QImage          img;
+  int                              frameIndex;
+  float                            distance;
+  QFuture<QPair<QPoint,double> >   poi;
+} JobData;
 
 //---------------------------------------------------------------
 static void s_print_help()
 {
   std::cout << std::endl;
-  std::cout << "mpstab - motion picture stabilization - " << VERSION    << std::endl;
-  std::cout << "usage: mpstab geometry inTemplate outTemplate"          << std::endl;
+  std::cout << "mpstab - motion picture stabilization - " << VERSION        << std::endl;
+  std::cout << "usage: mpstab geometry inTemplate outTemplate"              << std::endl;
 
+  std::cout << std::endl;
+  std::cout << "geometry:   widthxheight+x+y or 'pick'"                     << std::endl;
+  std::cout << "imTemplate: name-with-printf-placeholder or 'pick'"         << std::endl;
   std::cout << std::endl;
   std::cout << "examples:"                                                  << std::endl;
   std::cout << "  mpstab 100x100+160+90 in/frame_%d.png out/frame_%d.jpg"   << std::endl;
+  std::cout << "  mpstab pick pick out/frame_%d.jpg"                        << std::endl;
 
   std::cout << std::endl;
   std::cout << std::endl;
@@ -61,25 +75,6 @@ static bool s_parse_geometry(const QString &value, QRect &rect) // "widthxheight
 }
 
 //---------------------------------------------------------------
-typedef struct JobData_
-{
-  QString         imgName;
-  QImage          img;
-  int                              frameIndex;
-  float                            distance;
-  QFuture<QPair<QPoint,double> >   poi;
-} JobData;
-
-#define TO_STDSTRING(x)  x.toAscii().data()
-
-inline double calcRgbDistance(QRgb c1, QRgb c2)
-{
-  return fabs(qRed  (c1) - qRed  (c2)) +
-         fabs(qGreen(c1) - qGreen(c2)) +
-         fabs(qBlue (c1) - qBlue (c2));
-}
-
-//---------------------------------------------------------------
 QPoint nextPoint(const QPoint &p)
 {
   static QList<QPoint> queue;
@@ -96,7 +91,6 @@ QPoint nextPoint(const QPoint &p)
   std::cout << "MAP Result: " << p.x() << "/" << p.y() << " -> " << ret.x() << "/" << ret.y()<< std::endl;
   return ret;
 }
-
 
 //---------------------------------------------------------------
 QPair<QPoint,double> lookup(const HImage &ioi, const QImage &img, QPoint startPos, int tolerance)
@@ -170,20 +164,17 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-
   QRect   roi;
   if (!s_parse_geometry(app.arguments()[1],roi)) {
     s_print_help();
     return 1;
   }
 
-
-
   QString inTemplate  = app.arguments()[2];
   QString outTemplate = app.arguments()[3];
 
+  // expand or pick input-files:
   QStringList fileList;
-
   if (inTemplate != "pick") {
       int frameIndex   = 1;
       do {
@@ -199,9 +190,9 @@ int main(int argc, char *argv[])
           imageExtensions += QString(" *.%1").arg(QString(nextFormat).toLower());
       fileList = QFileDialog::getOpenFileNames(NULL,"Select Timelapse Images","",QString("Images (%1)").arg(imageExtensions));
   }
+
   QList<JobData> results;
   int frameIndex   = 0;
-
   HImage  ioi;
   QImage  lookupImage;
   bool withRecalibrate = true;
