@@ -223,7 +223,6 @@ int ImageView::mouseY(QMouseEvent *e)
         return 0;
     int y = e->y() >= 0 ? e->y() : 0;
     y = y < height()-1 ? y : height() -1;
-    qDebug() << e->y() << y;
     return y;
 }
 

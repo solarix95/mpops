@@ -3,6 +3,7 @@
 
 #include <QImage>
 #include "job.h"
+#include "shared/image.h"
 
 class BlueboxJob : public Job
 {

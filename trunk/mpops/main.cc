@@ -26,6 +26,7 @@ static void s_print_help()
   std::cout << "  --out=subdir"                                      << std::endl;
   std::cout << "  --format=ext"                                      << std::endl;
   std::cout << "  --tweening=strategy"                               << std::endl;
+  std::cout << "  --cont-exposure-frames=framecount"                 << std::endl;
   std::cout << "  --rename=filename-template (sprintf)"              << std::endl;
   std::cout << "  --threads=count     : default: cpu-count)"         << std::endl;
   std::cout << "  --create-toc        : creates cinelerra-toc"       << std::endl;
@@ -147,6 +148,11 @@ static void s_validate_args(const Args &args)
     std::cout << std::endl << "ERROR:  tweening only with '--rename'" << std::endl;
     exit(-1);
   }
+
+  if (args.withContExposure && (args.contExposureFrames < 2)) {
+    std::cout << std::endl << "ERROR:  continuing-exposure needs a framecount > 1" << std::endl;
+    exit(-1);
+  }
 }
 
 //---------------------------------------------------------------
@@ -189,6 +195,9 @@ static void s_parse_args(Args &args)
       if (parts.count() == 2) {
         args.colorPickerPixel = QPoint(parts[0].toInt(),parts[1].toInt());
       }
+    } else if (s_parse_arg(nextArg,"cont-exposure-frames",argValue)) {
+        args.withContExposure    = true;
+        args.contExposureFrames  = argValue.toInt();
     } else if (nextArg == "--create-toc") {
       args.withToc = true;
     } else if ((nextArg == "--help") || (nextArg == "-h") || (nextArg == "-?")) {
