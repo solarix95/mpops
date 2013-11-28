@@ -1,0 +1,11 @@
+../mpops/mpops --out=out1 --resize=320x200 in/*.jpg
+../mpops/mpops --out=out2 --resize=320x200 in/frame_%d.jpg
+../mpops/mpops --out=out3 --rename=image_%3.3d.jpg in/frame_%d.jpg
+../mpops/mpops --out=out4 --rename=image_%3.3d.png in/frame_%d.jpg
+../mpops/mpops --out=out5 --resize=320x200 --format=png --create-toc  in/*.jpg
+../mpops/mpops --out=out6 --rename=frame_%d.png --tweening=avg in/*.jpg
+../mpops/mpops --out=out7 --format=bmp in/*.jpg
+../mpops/mpops --out=out8 --format=tiff in/*.jpg
+../mpops/mpops --out=out9 --format=png in/test.mpg
+../mpops/mpops --out=out10 --format=png in/test.mpg
+../mpops/mpops --out=out11 --cont-exposure-frames=10 --format=png in/test.mpg

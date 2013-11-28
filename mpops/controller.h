@@ -4,9 +4,10 @@
 #include <QObject>
 #include <QRect>
 #include <QStringList>
-
 #include "opqueue.h"
 #include "cinelerratoc.h"
+#include "shared/fileimage.h"
+#include "shared/imagearray.h"
 
 //---------------------------------------------------------------
 typedef struct sArgs
@@ -38,9 +39,13 @@ typedef struct sArgs
   // --color-picker
   QPoint          colorPickerPixel;
 
+  bool            withContExposure;
+  int             contExposureFrames;
+
   sArgs() : withResize(false), withCropFrom(false), withCropTo(false),
             threadCount(QThread::idealThreadCount()),
-            printHelp(false), withToc(false), withAlpha(false) {};
+            printHelp(false), withToc(false), withAlpha(false),
+            withContExposure(false),contExposureFrames(-1) {}
 } Args;
 
 //---------------------------------------------------------------
@@ -61,17 +66,17 @@ private slots:
     void queueChanged(OpQueue*);
 
 private:
-    void    expandFilenames();
-    bool    pickGeometry();
+    bool    pickGeometry(ImagePtr firstFrame);
     QString createFileName(const QString originalFileName, int frameIndex);
 
     Args            mArgs;
-    QList<QString>  mFilenames;
     int             mCurrentIndex;
     int             mJobIndex;
     QList<OpQueue*> mThreads;
     CinelerraToc    mToc;
-    ImagePtr        mLastImage;
+    ImageArray      mImageArray;
+    ImagePtrs       mLastImages;
+    int             mMaxFramesInQueue;
 };
 
 #endif // CONTROLLER_H

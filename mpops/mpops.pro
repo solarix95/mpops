@@ -8,6 +8,8 @@ INCLUDEPATH += .
 CONFIG += debug
 QT += gui
 
+CONFIG += with_opencv
+
 include(../shared/shared.pro)
 
 # Input
@@ -17,22 +19,24 @@ SOURCES += main.cc \
     controller.cc \
     resizejob.cc \
     saveandclosejob.cc \
+    closejob.cc \
     cropjob.cc \
     openjob.cc \
     cinelerratoc.cc \
     blueboxjob.cc \
     tweeningavg.cc \
-    image.cc
+    longexposurejob.cc
 
 HEADERS += opqueue.h \
     job.h \
     controller.h \
     resizejob.h \
     saveandclosejob.h \
+    closejob.h \
     cropjob.h \
     openjob.h \
     cinelerratoc.h \
     blueboxjob.h \
     tweeningavg.h \
-    image.h
+    longexposurejob.h
 

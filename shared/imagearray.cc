@@ -17,6 +17,7 @@ ImageArray::ImageArray(const QString &videosource)
 #ifdef WITH_OPENCV
     mCvCapture         = NULL;
     mCvFrame           = NULL;
+    mCvFrameCount      = NULL;
 #endif
     setVideoSource(videosource);
 }
@@ -39,14 +40,15 @@ void ImageArray::setVideoSource(const QString &videosource)
     if (validateExternalImage(videosource)) {
         mSource        = ImageList;
         mExternalFiles = expandTemplateName(videosource);
+        mFrameIndex    = 0;
         mIsValid       = !mExternalFiles.isEmpty();
     } else {
 #ifdef WITH_OPENCV
-        mSource    = VideoFile;
-        mCvCapture = cvCreateFileCapture(videosource.toAscii().data());
-        qDebug() << "HERE" << mCvCapture;
-        mFrameIndex        = 0;
-        mIsValid = mCvCapture ? true:false;
+        mSource       = VideoFile;
+        mCvCapture    = cvCreateFileCapture(videosource.toAscii().data());
+        mFrameIndex   = 0;
+        mIsValid      = mCvCapture ? true:false;
+        mCvFrameCount =  mCvCapture ? (int)cvGetCaptureProperty(mCvCapture,CV_CAP_PROP_FRAME_COUNT) : 0;
 #endif
         // TODO
     }
@@ -93,8 +95,10 @@ ImageArray::Source ImageArray::source() const
 //---------------------------------------------------------------
 ImagePtr ImageArray::nextFrame(bool *hasNext)
 {
-    qDebug() << "NEXT";
     ImagePtr img;
+    if (mFrameIndex < 0)
+        return img;
+
     switch(mSource) {
         case ImageList : {
             if (mFrameIndex < mExternalFiles.count()) {
@@ -134,6 +138,7 @@ ImagePtr ImageArray::nextFrame(bool *hasNext)
                       img->img()->setPixel(x,y,qRgb(red,green,blue));
                   }
               }
+              mFrameIndex++;
           }
 #endif
         }
@@ -148,6 +153,9 @@ qint64  ImageArray::frameCount() const
 {
     switch(mSource) {
         case ImageList : return mExternalFiles.count();
+#ifdef WITH_OPENCV
+        case VideoFile : return mCvFrameCount;
+#endif
     }
     return -1;
 }

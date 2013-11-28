@@ -32,5 +32,6 @@ private:
 };
 
 typedef QSharedPointer<Image> ImagePtr;
+typedef QList<ImagePtr>       ImagePtrs;
 
 #endif // IMAGE_H

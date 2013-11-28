@@ -1,13 +1,14 @@
 #ifndef OPENJOB_H
 #define OPENJOB_H
 
-#include "job.h"
 #include <QImage>
+#include "job.h"
+#include "shared/image.h"
 
 class OpenJob : public Job
 {
 public:
-    OpenJob(ImagePtr img, const QString &fromFilename, const QPoint &colorPicker);
+    OpenJob(ImagePtr img,const QPoint &colorPicker);
 
     virtual void run();
 

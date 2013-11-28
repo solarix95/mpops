@@ -15,7 +15,8 @@ void SaveAndCloseJob::run()
 
   if (!mImg->img()->isNull()) {
     bool done = mImg->img()->save(mToFilename, 0, 99);
-    Q_ASSERT(done);
+    if (!done)
+      qWarning() << "SaveAndCloseJob::run: cannot save file:" << mToFilename;
   }
 
   mImg->setAllJobsDone();

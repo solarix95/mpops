@@ -4,10 +4,9 @@
 #include <iostream>
 
 //---------------------------------------------------------------
-OpenJob::OpenJob(ImagePtr img, const QString &fromFilename, const QPoint &colorPicker)
+OpenJob::OpenJob(ImagePtr img, const QPoint &colorPicker)
 {
   mImg            = img;
-  mFromFilename   = fromFilename;
   mColorPickerPos = colorPicker;
 }
 
@@ -15,7 +14,7 @@ OpenJob::OpenJob(ImagePtr img, const QString &fromFilename, const QPoint &colorP
 void OpenJob::run()
 {
   mImg->lock();
-  mImg->img()->load(mFromFilename);
+  mImg->load();
 
   // Do the Color-Picker-Job:
   if (!mImg->img()->isNull() && (!mColorPickerPos.isNull())) {

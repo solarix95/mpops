@@ -10,7 +10,9 @@
 #include "resizejob.h"
 #include "blueboxjob.h"
 #include "saveandclosejob.h"
+#include "closejob.h"
 #include "tweeningavg.h"
+#include "longexposurejob.h"
 #include "shared/geometrypicker.h"
 
 //---------------------------------------------------------------
@@ -20,164 +22,154 @@
 Controller::Controller(const Args &args, QObject *parent) :
     QObject(parent)
 {
-  mArgs = args;
-  expandFilenames();
-  mJobIndex = 1;
+    mArgs             = args;
+    mJobIndex         = 1;
+    mCurrentIndex     = 0;
+    mMaxFramesInQueue = qMax(2,args.contExposureFrames);
+
+    if (args.fileList.count() == 1) {
+        mImageArray.setVideoSource(args.fileList.first());
+    } else
+        mImageArray.appendSingleFrames(args.fileList);
 }
 
 //---------------------------------------------------------------
 bool Controller::run()
 {
-  if (mFilenames.isEmpty()) { // Nothing to be done
-    return false;
-  }
+    if (!mImageArray.isValid())
+        return false;
 
-  if (!pickGeometry())
-      return false;
+    Q_ASSERT(mThreads.isEmpty());
+    for (int i=0; i<mArgs.threadCount; i++) {
+        mThreads << new OpQueue();
+        mThreads.last()->start();
+        connect(mThreads.last(), SIGNAL(queueChanged(OpQueue*)), this, SLOT(queueChanged(OpQueue*)), Qt::QueuedConnection);
+    }
 
-  Q_ASSERT(mThreads.isEmpty());
-  for (int i=0; i<mArgs.threadCount; i++) {
-    mThreads << new OpQueue();
-    mThreads.last()->start();
-    connect(mThreads.last(), SIGNAL(queueChanged(OpQueue*)), this, SLOT(queueChanged(OpQueue*)), Qt::QueuedConnection);
-  }
+    foreach(OpQueue *nextQueue, mThreads) {
+        queueChanged(nextQueue);
+    }
 
-  foreach(OpQueue *nextQueue, mThreads) {
-     queueChanged(nextQueue);
-  }
+    if (mArgs.withResize)
+        mToc.setSize(mArgs.toSize);
 
-  if (mArgs.withResize)
-      mToc.setSize(mArgs.toSize);
+    if (!mArgs.outDir.isEmpty())
+        mToc.setFilename(mArgs.outDir + QDir::separator() + mToc.filename());
 
-  if (!mArgs.outDir.isEmpty())
-    mToc.setFilename(mArgs.outDir + QDir::separator() + mToc.filename());
-
-  return true;
+    return true;
 }
 
 //---------------------------------------------------------------
 void Controller::queueChanged(OpQueue *queue)
 {
-  if ((queue->jobCount() == 0) && (mCurrentIndex < mFilenames.count())) {
-    ImagePtr img(new Image(new QImage));
-    bool     withTweens = !mArgs.tweening.isEmpty() && (mCurrentIndex > 0);
+    ImagePtr img;
+    bool  atEnd = false;
 
-    QString fromFileName = mFilenames[mCurrentIndex];
-    std::cout << "starting " << (mCurrentIndex+1) << "/" << mFilenames.count() << std::endl;
+    if (queue->jobCount() == 0) {
+        img = mImageArray.nextFrame();
+        if (img.isNull())
+            atEnd = true;
+        else {
+            if (mCurrentIndex == 0) {
+                img->load();
+                pickGeometry(img);
+            }
+            bool     withTweens = !mArgs.tweening.isEmpty() && (mCurrentIndex > 0);
 
-    // Loading:
-    queue->addJob(new OpenJob(img,fromFileName,mArgs.colorPickerPixel));
+            std::cout << "starting " << (mCurrentIndex+1) << "/" << mImageArray.frameCount() << std::endl;
 
-    // Crop-Operation:
-    if (mArgs.withCropFrom) {
-      QRect currentRect;
-      if (mArgs.withCropTo) {
+            // Loading:
+            queue->addJob(new OpenJob(img,mArgs.colorPickerPixel));
 
-        double imgFactor = (mCurrentIndex+1)/((double)mFilenames.count()); // 0 .. 1
-        currentRect.setX(SCALE(mArgs.fromRect.x(), mArgs.toRect.x(),imgFactor));
-        currentRect.setY(SCALE(mArgs.fromRect.y(), mArgs.toRect.y(),imgFactor));
-        currentRect.setWidth(SCALE(mArgs.fromRect.width(), mArgs.toRect.width(),imgFactor));
-        currentRect.setHeight(SCALE(mArgs.fromRect.height(), mArgs.toRect.height(),imgFactor));
-      } else
-        currentRect = mArgs.fromRect;
-      queue->addJob(new CropJob(img,currentRect));
-    }
+            // Crop-Operation:
+            if (mArgs.withCropFrom) {
+                QRect currentRect;
+                if (mArgs.withCropTo) {
 
-    // Resize-Operation
-    if (mArgs.withResize)
-        queue->addJob(new ResizeJob(img,mArgs.toSize));
+                    double imgFactor = (mCurrentIndex+1)/((double)mImageArray.frameCount()); // 0 .. 1
+                    currentRect.setX(SCALE(mArgs.fromRect.x(), mArgs.toRect.x(),imgFactor));
+                    currentRect.setY(SCALE(mArgs.fromRect.y(), mArgs.toRect.y(),imgFactor));
+                    currentRect.setWidth(SCALE(mArgs.fromRect.width(), mArgs.toRect.width(),imgFactor));
+                    currentRect.setHeight(SCALE(mArgs.fromRect.height(), mArgs.toRect.height(),imgFactor));
+                } else
+                    currentRect = mArgs.fromRect;
+                queue->addJob(new CropJob(img,currentRect));
+            }
 
-    // Bluebox-Operation (add-alpha)
-    if (mArgs.withAlpha)
-        queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
+            // Resize-Operation
+            if (mArgs.withResize)
+                queue->addJob(new ResizeJob(img,mArgs.toSize));
 
-    // Store-Operation:
-    QString toFileName = createFileName(fromFileName, withTweens ? mJobIndex+1 : mJobIndex);
+            // Bluebox-Operation (add-alpha)
+            if (mArgs.withAlpha)
+                queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
 
-    queue->addJob(new SaveAndCloseJob(img,toFileName));
-    QDir dir;
-    mToc.appendImage(dir.absoluteFilePath(toFileName));
+            // Store-Operation:
+            QString toFileName = createFileName(img->frameName(), withTweens ? mJobIndex+1 : mJobIndex);
 
-    if (withTweens && (mArgs.tweening == "avg")) {
-      Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
-      ImagePtr out(new Image(new QImage()));
-      queue->addJob(new TweeningAvg(mLastImage,img,out));
-      QString tweenFileName = createFileName(fromFileName,mJobIndex);
-      queue->addJob(new SaveAndCloseJob(out,tweenFileName));
-      mJobIndex++;
-    }
-    mCurrentIndex++;
-    mJobIndex++;
-    mLastImage = img;
-  }
+            if (mArgs.withContExposure) {
+                queue->addJob(new CloseJob(img)); // saveing is done by ExposureJob
+                ImagePtr outImg(new Image(new QImage,""));
+                queue->addJob(new LongExposureJob(ImagePtrs() << mLastImages << img, outImg,toFileName,mArgs.contExposureFrames));
+            } else {
+                queue->addJob(new SaveAndCloseJob(img,toFileName));
+            }
 
+            QDir dir;
+            mToc.appendImage(dir.absoluteFilePath(toFileName));
 
-  if ((mCurrentIndex == mFilenames.count())) {
-    int jobCount = 0;
-    foreach(OpQueue *nextQueue, mThreads) {
-      if (nextQueue->jobCount() == 0) {
-        mThreads.removeAll(nextQueue);
-        nextQueue->quit();
-        nextQueue->wait();
-        nextQueue->deleteLater();
-      } else
-        jobCount += nextQueue->jobCount();
-    }
-    if (jobCount > 0)
-      std::cout << "waiting for " << jobCount << " jobs" << std::endl;
-  }
-
-  if (mThreads.isEmpty()) {
-    if (mArgs.withToc && mToc.save())
-        std::cout << "cinelerra-toc created" << std::endl;
-    emit finished();
-  }
-}
-
-//---------------------------------------------------------------
-void Controller::expandFilenames()
-{
-  mFilenames.clear();
-  mCurrentIndex = 0;
-  if ((mArgs.fileList.count() == 1) && !QFile::exists(mArgs.fileList[0])) { // maybe a template?
-    int index = 0;
-    bool someFilesFound;
-    do {
-      someFilesFound = false;
-      for(int i=0; i<100; i++) {
-        QString expandedFilename = mArgs.fileList[0];
-        expandedFilename.sprintf(expandedFilename.toAscii().data(),index);
-        if (QFile::exists(expandedFilename)) {
-          someFilesFound = true;
-          mFilenames << expandedFilename;
+            if (withTweens && (mArgs.tweening == "avg")) {
+                Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
+                ImagePtr out(new Image(new QImage(),"")); // TODO: tweenFileName direkt übergeben?
+                queue->addJob(new TweeningAvg(mLastImages.last(),img,out));
+                QString tweenFileName = createFileName(img->frameName(),mJobIndex);
+                queue->addJob(new SaveAndCloseJob(out,tweenFileName));
+                mJobIndex++;
+            }
+            mCurrentIndex++;
+            mJobIndex++;
+            mLastImages << img;
+            while (mLastImages.count() > mMaxFramesInQueue)
+                mLastImages.takeFirst();
         }
-        index++;
-      }
-    } while (someFilesFound);
-  } else {
-    mFilenames = mArgs.fileList;
-  }
-  std::cout << "todo: " << mFilenames.count() << " images" << std::endl;
+    }
+
+    if ((mCurrentIndex == mImageArray.frameCount()) || atEnd) {
+        int jobCount = 0;
+        foreach(OpQueue *nextQueue, mThreads) {
+            if (nextQueue->jobCount() == 0) {
+                mThreads.removeAll(nextQueue);
+                nextQueue->quit();
+                nextQueue->wait();
+                nextQueue->deleteLater();
+            } else
+                jobCount += nextQueue->jobCount();
+        }
+        if (jobCount > 0)
+            std::cout << "waiting for " << jobCount << " jobs" << std::endl;
+    }
+
+    if (mThreads.isEmpty()) {
+        if (mArgs.withToc && mToc.save())
+            std::cout << "cinelerra-toc created" << std::endl;
+        emit finished();
+    }
 }
 
 //---------------------------------------------------------------
-bool Controller::pickGeometry()
+bool Controller::pickGeometry(ImagePtr firstFrame)
 {
-    if (mFilenames.isEmpty() || !QFile::exists(mFilenames.first()))
+    if (!firstFrame.isNull())
         return true;
 
-    QImage img(mFilenames.first());
-    if (img.isNull())
-        return false;
-
     if (mArgs.withCropFrom && mArgs.fromRect.width() <= 0) {
-        GeometryPicker picker(&img,"pick 'from-crop'");
+        GeometryPicker picker(firstFrame->img(),"pick 'from-crop'");
         if (!picker.exec())
             return false;
         mArgs.fromRect = picker.selection();
     }
     if (mArgs.withCropTo && mArgs.toRect.width() <= 0) {
-        GeometryPicker picker(&img,"pick 'to-crop'");
+        GeometryPicker picker(firstFrame->img(),"pick 'to-crop'");
         if (!picker.exec())
             return false;
         mArgs.toRect = picker.selection();
@@ -188,15 +180,20 @@ bool Controller::pickGeometry()
 //---------------------------------------------------------------
 QString Controller::createFileName(const QString originalFileName, int frameIndex)
 {
-  QString originalFileNameWithoutPath = originalFileName;
-  while (originalFileNameWithoutPath.indexOf(QDir::separator()) >= 0)
-    originalFileNameWithoutPath.remove(0,originalFileNameWithoutPath.indexOf(QDir::separator()) + 1);
+    QString originalFileNameWithoutPath = originalFileName;
+    while (originalFileNameWithoutPath.indexOf(QDir::separator()) >= 0)
+        originalFileNameWithoutPath.remove(0,originalFileNameWithoutPath.indexOf(QDir::separator()) + 1);
     
-  QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileNameWithoutPath : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
-  if (!mArgs.outDir.isEmpty())
-    toFileName = mArgs.outDir + QDir::separator() + toFileName;
-  if (!mArgs.format.isEmpty()) // replace extension:
-    toFileName = toFileName.left(toFileName.indexOf(".")+1) + mArgs.format;
+    QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileNameWithoutPath : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
+    if (!mArgs.outDir.isEmpty())
+        toFileName = mArgs.outDir + QDir::separator() + toFileName;
+    if (!mArgs.format.isEmpty()) { // replace extension:
+        int extPos = toFileName.indexOf(".");
+        if (extPos > 0)
+            toFileName = toFileName.left(toFileName.indexOf(".")+1) + mArgs.format;
+        else
+            toFileName += "." +mArgs.format;
+    }
 
-  return toFileName;
+    return toFileName;
 }
