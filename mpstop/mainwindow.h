@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include "selectionmodel.h"
 #include "workerthread.h"
+#include "defsettings.h"
 
 namespace Ui {
 class MainWindow;
@@ -22,17 +23,25 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     
+protected:
+    virtual bool event(QEvent *event);
+
 private slots:
     void openFrames();
+    void updateFrameIndex(int frm);
+    void updateRenderButton(bool isEnabled);
+    void restoreWindowState();
 
 private:
     Ui::MainWindow *ui;
 
+
     Movie          *mMovie;
     MovieScene     *mScene;
-    Cinema         *mCinema;
+    DefSettings     mSettings;
     SelectionModel  mSelections;
     WorkerThread    mThread;
+    bool            mIsInitialized;
 
 };
 

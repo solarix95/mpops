@@ -5,12 +5,14 @@
 #include <QCoreApplication>
 #include <QDebug>
 
+// -----------------------------------------------------------
 Movie::Movie(QObject *parent) :
     QObject(parent)
 {
     mTopFrameIdent = 1;
 }
 
+// -----------------------------------------------------------
 int Movie::frameCount() const
 {
     lock();
@@ -19,41 +21,58 @@ int Movie::frameCount() const
     return ret;
 }
 
+// -----------------------------------------------------------
 QSize Movie::thumbSize()
 {
     return QSize(70,70);
 }
 
+// -----------------------------------------------------------
 QSize Movie::renderSize()
 {
     return QSize(1280,720);
 }
 
+// -----------------------------------------------------------
 void Movie::addFrames(const QStringList &fileList)
 {
     lock();
+    int startIndex = mFrames.count();
     foreach(QString nextImage, fileList) {
         mFrames << new Frame();
+        mFrames.last()->type      = FileSource;
         mFrames.last()->ident     = mTopFrameIdent++;
         mFrames.last()->source    = nextImage;
         mFrames.last()->rendered  = ImagePtr(new QImage());
         mFrames.last()->thumbnail = ImagePtr(new QImage());
-        // mFrames.last()->thumbnail->load(nextImage);
-        // *(mFrames.last()->thumbnail) = mFrames.last()->thumbnail->scaled(thumbSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
-
-        emit frameAppended(mFrames.count()-1);
     }
     unlock();
+
+    emit isComplete(false);
+    for(int i=startIndex; i<(startIndex + fileList.count()); i++)
+        emit frameAppended(i);
 }
 
+Movie::FrameType Movie::type(int frame) const
+{
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+    Q_ASSERT(frame >= 0 && frame < mFrames.count());
+    return mFrames.at(frame)->type;
+}
+
+// -----------------------------------------------------------
 QImage *Movie::thumbNail(int frame) const
 {
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
     Q_ASSERT(frame >= 0 && frame < mFrames.count());
     return mFrames.at(frame)->thumbnail.data();
 }
 
+// -----------------------------------------------------------
 QImage *Movie::rendered(int frame) const
 {
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+
     QImage *ret = NULL;
     lock();
     Q_ASSERT(frame >= 0 && frame < mFrames.count());
@@ -68,13 +87,15 @@ QImage *Movie::rendered(int frame) const
     return ret;
 }
 
-bool Movie::frame(int index, qint64 &id, bool &hasThumb, bool &isRendered, QString &source)
+// -----------------------------------------------------------
+bool Movie::frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source)
 {
     lock();
 
     bool ret = index >= 0 && index < mFrames.count();
     if (ret) {
         id          = mFrames[index]->ident;
+        type        = mFrames[index]->type;
         hasThumb    = !mFrames[index]->thumbnail->isNull();
         isRendered  = !mFrames[index]->rendered->isNull();
         source      = mFrames[index]->source;
@@ -84,17 +105,45 @@ bool Movie::frame(int index, qint64 &id, bool &hasThumb, bool &isRendered, QStri
     return ret;
 }
 
+// -----------------------------------------------------------
+
+bool Movie::relativeImage(int fromIndex, qint64 fromId, int relIndex, qint64 &relId, QImage &renderedImage)
+{
+    lock();
+
+    bool ret = fromIndex >= 0 && (fromIndex < mFrames.count()) && mFrames[fromIndex]->ident == fromId;
+    if (ret) {
+        int newIndex = fromIndex + relIndex;
+        if (newIndex >= 0 && newIndex < mFrames.count()) { // Neuer Index gültig?
+            renderedImage = *mFrames[newIndex]->rendered;
+            relId         = mFrames[newIndex]->ident;
+        } else
+            ret = false;
+    }
+
+    unlock();
+    return ret;
+}
+
+// -----------------------------------------------------------
+void Movie::setMovieIsComplete()
+{
+    emit isComplete(true);
+}
+
+// -----------------------------------------------------------
 void Movie::lock() const
 {
     const_cast<Movie*>(this)->mMutex.lock();
 }
 
-
+// -----------------------------------------------------------
 void Movie::unlock() const
 {
     const_cast<Movie*>(this)->mMutex.unlock();
 }
 
+// -----------------------------------------------------------
 void Movie::jobThumb(int index, qint64 id, QImage thumb)
 {
     lock();
@@ -112,6 +161,7 @@ void Movie::jobThumb(int index, qint64 id, QImage thumb)
         emit frameChanged(index);
 }
 
+// -----------------------------------------------------------
 void Movie::jobRender(int index, qint64 id, QImage result)
 {
     lock();
@@ -128,4 +178,38 @@ void Movie::jobRender(int index, qint64 id, QImage result)
     if (changed)
         emit frameChanged(index);
 
+}
+
+// -----------------------------------------------------------
+void Movie::addFreezeFrame(int startIndex)
+{
+    lock();
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+    Q_ASSERT(startIndex >= 0);
+    if (startIndex > mFrames.count())
+        startIndex = mFrames.count();
+
+    Frame *frm = new Frame();
+    frm->type      = FreezeFrame;
+    frm->ident     = mTopFrameIdent++;
+    frm->rendered  = ImagePtr(new QImage());
+    frm->thumbnail = ImagePtr(new QImage());
+    mFrames.insert(startIndex,frm);
+
+    emit isComplete(false);
+    unlock();
+
+    emit frameInserted(startIndex);
+}
+
+void Movie::removeFrame(int startIndex)
+{
+    qDebug() << "MOVIE: DELTE" << startIndex;
+    lock();
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+    Q_ASSERT(startIndex >= 0);
+    delete mFrames.takeAt(startIndex);
+    unlock();
+
+    emit frameDeleted(startIndex);
 }

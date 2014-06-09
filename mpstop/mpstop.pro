@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     timeline.cc \
     selectionmodel.cc \
     cinema.cc \
-    workerthread.cc
+    workerthread.cc \
+    defsettings.cc
 
 HEADERS  += mainwindow.h \
     movie.h \
@@ -28,6 +29,7 @@ HEADERS  += mainwindow.h \
     timeline.h \
     selectionmodel.h \
     cinema.h \
-    workerthread.h
+    workerthread.h \
+    defsettings.h
 
 FORMS    += mainwindow.ui

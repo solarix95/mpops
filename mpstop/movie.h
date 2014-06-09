@@ -11,27 +11,46 @@ class Movie : public QObject
 {
     Q_OBJECT
 public:
+    enum FrameType {
+        FileSource,
+        FreezeFrame,
+        TweenFrame
+    };
+
     explicit Movie(QObject *parent = 0);
     
     int  frameCount() const;
 
     void     addFrames(const QStringList &fileList);
 
+    FrameType type(int frame) const;
     QImage  *thumbNail(int frame) const;
     QImage  *rendered(int frame) const;
 
-    bool     frame(int index, qint64 &id, bool &hasThumb, bool &isRendered, QString &source);
+    // Thread-Interface:
+    bool     frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source);
+    bool     relativeImage(int fromIndex, qint64 fromId, int relIndex, qint64 &relIdent, QImage &renderedImage);
+
 
     static QSize thumbSize();
     static QSize renderSize();
 
 signals:
     void frameAppended(int index);
+    void frameInserted(int index);
+    void frameDeleted(int index);
     void frameChanged(int index);
+    void isComplete(bool complete);
     
 public slots:
+    // Thread-Anwsers:
     void jobThumb(int index, qint64 id, QImage thumb);
     void jobRender(int index, qint64 id, QImage result);
+    void setMovieIsComplete();
+
+    // GUI-Request:
+    void addFreezeFrame(int startIndex);
+    void removeFrame(int startIndex);
 
 private:
     void lock() const;
@@ -39,11 +58,14 @@ private:
 
     typedef QSharedPointer<QImage> ImagePtr;
 
+
+
     struct Frame {
-        qint64   ident;
-        ImagePtr thumbnail;
-        ImagePtr rendered;
-        QString  source;
+        qint64     ident;
+        ImagePtr   thumbnail;
+        ImagePtr   rendered;
+        QString    source;
+        FrameType  type;
     };
 
     QList<Frame*>  mFrames;

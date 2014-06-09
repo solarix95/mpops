@@ -28,36 +28,73 @@ void WorkerThread::run()
 void WorkerThread::workRun()
 {
     Q_ASSERT(QThread::currentThread() == this);
+    bool isComplete = true;
     for (int i=0; i<mMovie->frameCount(); i++) {
         qint64  id;
+        qint32  type;
         bool    hasThumb;
         bool    isRendered;
         QString source;
-        if (!mMovie->frame(i,id,hasThumb,isRendered,source))
+        if (!mMovie->frame(i,id,type,hasThumb,isRendered,source))
             break;
         if (!hasThumb) {
-            createThumb(i,id,source);
+            createThumb(i,id,type,source);
             continue;
         }
         if (!isRendered) {
-            render(i,id,source);
+            isComplete = render(i,id,type,source) && isComplete;
             continue;
         }
     }
+
+    if (isComplete)
+        emit movieCompleteRendered();
 }
 
-void WorkerThread::createThumb(int frameIndex, qint64 frameId, const QString &source)
+void WorkerThread::createThumb(int frameIndex,qint64 frameId,  qint32 type, const QString &source)
 {
     QImage img;
-    img.load(source);
-    img = img.scaled(Movie::thumbSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    emit thumbCreated(frameIndex,frameId,img);
+
+    switch (type) {
+    case Movie::FileSource : {
+        img.load(source);
+    } break;
+    case Movie::FreezeFrame : {
+        qint64 relIdent;
+        QImage fullFrame;
+        if (mMovie->relativeImage(frameIndex,frameId,-1,relIdent,fullFrame)) {
+            img = fullFrame;
+        }
+    }
+    }
+
+    if (!img.isNull()) {
+        img = img.scaled(Movie::thumbSize(),Qt::KeepAspectRatio,Qt::FastTransformation);
+        emit thumbCreated(frameIndex,frameId,img);
+    }
 }
 
-void WorkerThread::render(int frameIndex, qint64 frameId, const QString &source)
+bool WorkerThread::render(int frameIndex, qint64 frameId, qint32 type, const QString &source)
 {
     QImage img;
-    img.load(source);
-    img = img.scaled(Movie::renderSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
-    emit rendered(frameIndex,frameId,img);
+
+    switch (type) {
+    case Movie::FileSource : {
+        img.load(source);
+    } break;
+    case Movie::FreezeFrame : {
+        qint64 relIdent;
+        QImage fullFrame;
+        if (mMovie->relativeImage(frameIndex,frameId,-1,relIdent,fullFrame)) {
+            img = fullFrame;
+        }
+    }
+    }
+
+    if (!img.isNull()) {
+        img = img.scaled(Movie::renderSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        emit rendered(frameIndex,frameId,img);
+    }
+
+    return !img.isNull();
 }
