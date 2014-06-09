@@ -22,9 +22,13 @@ public:
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 
+signals:
+    void freezeFrameRequest(int index);
+    void deleteFrameRequest(int index);
 
 protected:
     virtual void	mousePressEvent ( QGraphicsSceneMouseEvent * event );
+    virtual void 	contextMenuEvent ( QGraphicsSceneContextMenuEvent * event );
 
 private slots:
     void redraw(int index = -1);

@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "selectionmodel.h"
 
 SelectionModel::SelectionModel()
@@ -9,6 +10,7 @@ void SelectionModel::select(int index, bool deselectOthers)
     while (deselectOthers && mIndexes.count() > 0)
         deselect(mIndexes.first());
 
+    qDebug() << mIndexes << index << deselectOthers;
     if (!mIndexes.contains(index)) {
         mIndexes.append(index);
         emit changed(index);

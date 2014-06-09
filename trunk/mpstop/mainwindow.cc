@@ -17,24 +17,51 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->btnOpen, SIGNAL(clicked()), this, SLOT(openFrames()));
 
+    mIsInitialized = false;
     mMovie = new Movie();
     mScene = new MovieScene(this, mMovie,&mSelections);
 
     ui->timeLineView->setScene(mScene);
     ui->cinema->setMovie(mMovie);
 
+    connect(ui->btnPlayFwd, SIGNAL(clicked()), ui->cinema, SLOT(playFwd()));
+    connect(ui->btnPlayBack, SIGNAL(clicked()), ui->cinema, SLOT(playBack()));
+    connect(ui->btnPause, SIGNAL(clicked()), ui->cinema, SLOT(pause()));
+    connect(ui->cinema, SIGNAL(currentFrame(int)), this, SLOT(updateFrameIndex(int)));
+    connect(ui->edtCurrentFrame,SIGNAL(valueChanged(int)), ui->cinema, SLOT(setFrame(int)));
+
     connect(&mSelections, SIGNAL(selected(int)), ui->cinema, SLOT(setFrame(int)));
     connect(&mThread, SIGNAL(thumbCreated(int,qint64,QImage)), mMovie, SLOT(jobThumb(int,qint64,QImage)));
     connect(&mThread, SIGNAL(rendered(int,qint64,QImage)), mMovie, SLOT(jobRender(int,qint64,QImage)));
+    connect(&mThread,SIGNAL(movieCompleteRendered()), mMovie, SLOT(setMovieIsComplete()));
 
+    connect(mMovie, SIGNAL(isComplete(bool)), this, SLOT(updateRenderButton(bool)));
+
+
+    ui->edtVideoWidth->setValue(mSettings.defaultWidth());
+    ui->edtVideoHeight->setValue(mSettings.defaultHeight());
     mThread.start(mMovie);
+
+    QTimer::singleShot(1,this, SLOT(restoreWindowState()));
 }
 
 MainWindow::~MainWindow()
 {
+    qDebug() << "SAVE" << pos();
+    mSettings.setLastMainPos(pos());
+    mSettings.setLastMainSize(size());
+    mSettings.setLastGeometry(geometry());
+
     delete ui;
     mThread.quit();
     mThread.wait();
+}
+
+bool MainWindow::event(QEvent *event)
+{
+    if (event->type() == QEvent::Polish && !mIsInitialized) {
+    }
+    return QMainWindow::event(event);
 }
 
 void MainWindow::openFrames()
@@ -46,9 +73,27 @@ void MainWindow::openFrames()
     }
     filter = QString("Images (%1)").arg(filter.trimmed());
 
-    QStringList files = QFileDialog::getOpenFileNames(this,"Select Images",QString(),filter);
-    if (files.count() > 0)
+    QStringList files = QFileDialog::getOpenFileNames(this,"Select Images",mSettings.lastInDir(),filter);
+    if (files.count() > 0) {
         mMovie->addFrames(files);
+        mSettings.setLastInDir(files.first());
+    }
+}
 
-    qDebug() << "FERTIG";
+void MainWindow::updateFrameIndex(int frm)
+{
+    ui->edtCurrentFrame->setValue(frm);
+}
+
+void MainWindow::updateRenderButton(bool isEnabled)
+{
+    ui->btnRender->setEnabled(isEnabled);
+}
+
+void MainWindow::restoreWindowState()
+{
+    // resize(mSettings.lastMainSize());
+    // move(mSettings.lastMainPos());
+    qDebug() << pos() << mSettings.lastMainPos();
+    setGeometry(mSettings.lastGeometry()); // WTF.. not working..?!?
 }

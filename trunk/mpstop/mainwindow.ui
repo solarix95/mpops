@@ -36,7 +36,7 @@
       <widget class="QPushButton" name="btnPlayBack">
        <property name="geometry">
         <rect>
-         <x>110</x>
+         <x>100</x>
          <y>360</y>
          <width>98</width>
          <height>27</height>
@@ -59,16 +59,6 @@
         <string>&gt;</string>
        </property>
       </widget>
-      <widget class="QLineEdit" name="edtCurrentFrame">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>360</y>
-         <width>91</width>
-         <height>27</height>
-        </rect>
-       </property>
-      </widget>
       <widget class="QPushButton" name="btnPause">
        <property name="geometry">
         <rect>
@@ -82,6 +72,19 @@
         <string>&quot;</string>
        </property>
       </widget>
+      <widget class="QSpinBox" name="edtCurrentFrame">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>360</y>
+         <width>91</width>
+         <height>27</height>
+        </rect>
+       </property>
+       <property name="maximum">
+        <number>999999</number>
+       </property>
+      </widget>
      </widget>
     </item>
     <item>
@@ -91,6 +94,9 @@
         <width>16777215</width>
         <height>100</height>
        </size>
+      </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::DefaultContextMenu</enum>
       </property>
       <property name="verticalScrollBarPolicy">
        <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -144,10 +150,10 @@
        <widget class="QPushButton" name="btnOpen">
         <property name="geometry">
          <rect>
-          <x>10</x>
+          <x>40</x>
           <y>40</y>
           <width>71</width>
-          <height>41</height>
+          <height>31</height>
          </rect>
         </property>
         <property name="text">
@@ -161,40 +167,80 @@
        <property name="title">
         <string>Output</string>
        </property>
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLineEdit" name="edtOutDir">
         <property name="geometry">
          <rect>
-          <x>30</x>
+          <x>40</x>
+          <y>140</y>
+          <width>113</width>
+          <height>27</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="edtVideoWidth">
+        <property name="geometry">
+         <rect>
+          <x>40</x>
           <y>30</y>
-          <width>113</width>
+          <width>81</width>
           <height>27</height>
          </rect>
         </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>1920</number>
+        </property>
        </widget>
-       <widget class="QLineEdit" name="lineEdit_2">
+       <widget class="QSpinBox" name="edtVideoHeight">
         <property name="geometry">
          <rect>
-          <x>30</x>
+          <x>40</x>
           <y>60</y>
-          <width>113</width>
+          <width>81</width>
           <height>27</height>
          </rect>
         </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10000</number>
+        </property>
+        <property name="value">
+         <number>1080</number>
+        </property>
        </widget>
-       <widget class="QLineEdit" name="lineEdit_3">
+       <widget class="QSpinBox" name="edtVideoFps">
         <property name="geometry">
          <rect>
-          <x>30</x>
-          <y>110</y>
-          <width>113</width>
+          <x>40</x>
+          <y>90</y>
+          <width>81</width>
           <height>27</height>
          </rect>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>240</number>
+        </property>
+        <property name="value">
+         <number>12</number>
         </property>
        </widget>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="btnRender">
+       <property name="contextMenuPolicy">
+        <enum>Qt::NoContextMenu</enum>
+       </property>
        <property name="text">
         <string>Render</string>
        </property>

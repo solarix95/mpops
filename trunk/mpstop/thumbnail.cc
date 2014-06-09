@@ -1,6 +1,9 @@
 #include <QPainter>
 #include <QDebug>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneContextMenuEvent>
+#include <QMenu>
+#include <QAction>
 
 #include "thumbnail.h"
 #include "movie.h"
@@ -21,14 +24,17 @@ Thumbnail::Thumbnail(Movie *movie, int frameIndex, SelectionModel *selections) :
 
     connect(mSelections,SIGNAL(changed(int)), this, SLOT(redraw(int)));
     connect(mMovie,SIGNAL(frameChanged(int)), this, SLOT(redraw(int)));
+    connect(mMovie, SIGNAL(frameDeleted(int)), this, SLOT(redraw()));
 }
 
+// -----------------------------------------------------------
 QRectF Thumbnail::boundingRect() const
 {
     QSize mySize = Movie::thumbSize();
     return QRect(mId * (10 + mySize.width()),0,mySize.width()+1,mySize.height());
 }
 
+// -----------------------------------------------------------
 void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_ASSERT(painter);
@@ -36,21 +42,51 @@ void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
     QRectF r = boundingRect();
     painter->translate(r.x(),r.y());
     paintThumb(painter);
+
+    switch(mMovie->type(mId)) {
+    case Movie::FreezeFrame: {
+        painter->setBrush(Qt::red);
+        painter->drawEllipse(10,10,7,7);
+    } break;
+    }
+
     painter->restore();
 }
 
+// -----------------------------------------------------------
 void Thumbnail::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_ASSERT(mSelections);
+    qDebug() << "MOUSE PRES";
     mSelections->select(mId, !(event->modifiers() & Qt::ControlModifier));
 }
 
+// -----------------------------------------------------------
+void Thumbnail::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
+{
+    return;
+
+    QMenu menu;
+    QAction *removeAction  = menu.addAction("Remove");
+    QAction *freezeAction  = menu.addAction("FreezeFrame");
+    // QAction *freezesAction = menu.addAction("FreezeFrames");
+    mSelections->select(mId,true);
+    QAction *selectedAction = menu.exec(event->screenPos());
+
+    if (selectedAction == freezeAction)
+        emit freezeFrameRequest(mId);
+    if (selectedAction == removeAction)
+        emit deleteFrameRequest(mId);
+}
+
+// -----------------------------------------------------------
 void Thumbnail::redraw(int index)
 {
     if (index < 0 || index == mId)
         update();
 }
 
+// -----------------------------------------------------------
 void Thumbnail::paintThumb(QPainter *painter)
 {
     Q_ASSERT(mSelections);

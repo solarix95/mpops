@@ -17,6 +17,7 @@ public:
 signals:
     void thumbCreated(int frameIndex, qint64 frameId, QImage thumb);
     void rendered(int frameIndex, qint64 frameId, QImage result);
+    void movieCompleteRendered();
 
 public slots:
     
@@ -27,8 +28,8 @@ private slots:
     void workRun();
 
 private:
-    void createThumb(int frameIndex, qint64 frameId, const QString &source);
-    void render(int frameIndex, qint64 frameId, const QString &source);
+    void createThumb(int frameIndex, qint64 frameId, qint32 type, const QString &source);
+    bool render(int frameIndex, qint64 frameId, qint32 type, const QString &source);
 
     Movie *mMovie;
 

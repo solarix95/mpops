@@ -2,6 +2,7 @@
 #define CINEMA_H
 
 #include <QWidget>
+#include <QTimer>
 
 class Movie;
 class Cinema : public QWidget
@@ -13,20 +14,29 @@ public:
     void setMovie(Movie *movie);
 
 signals:
+    void currentFrame(int);
     
 public slots:
     void setFrame(int index);
+
+    // Player:
+    void playFwd();
+    void playBack();
+    void pause();
 
 protected:
     virtual void paintEvent(QPaintEvent *);
 
 private slots:
     void frameChanged(int frameIndex);
+    void showNextFrame();
 
 private:
-    Movie *mMovie;
-    bool   mIsPlaying;
-    int    mCurrentFrame;
+    Movie  *mMovie;
+    QTimer  mPlayTimer;
+    bool    mIsPlaying;
+    int     mCurrentFrame;
+    int     mPlayDirection;
     
 };
 
