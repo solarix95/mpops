@@ -256,7 +256,6 @@ void Movie::addFreezeFrame(int startIndex)
 
 void Movie::removeFrame(int startIndex)
 {
-    qDebug() << "MOVIE: DELTE" << startIndex;
     lock();
     Q_ASSERT(QThread::currentThread() == qApp->thread());
     Q_ASSERT(startIndex >= 0);

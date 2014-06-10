@@ -1,4 +1,5 @@
 #include <QPainter>
+#include <QTime>
 #include "cinema.h"
 #include "movie.h"
 
@@ -68,8 +69,20 @@ void Cinema::paintEvent(QPaintEvent *)
 
     if (!mMovie->rendered(mCurrentFrame) || mMovie->rendered(mCurrentFrame)->isNull())
         return;
-    QImage img = mMovie->rendered(mCurrentFrame)->scaled(width(),height(),Qt::KeepAspectRatio);
-    p.drawImage(0,(height()-img.height())/2,img);
+
+    QImage img = mMovie->rendered(mCurrentFrame)->scaled(width()-10,height()-10,Qt::KeepAspectRatio);
+    p.drawImage((width()-img.width())/2,(height()-img.height())/2,img);
+
+    int msec = mCurrentFrame/(double)mMovie->fps() * 1000;
+    int h    = msec/3600000;
+    int m    = (msec-h*3600000)/60000;
+    int s    = (msec-h*3600000-m*60000)/1000;
+    int ms   = msec % 1000;
+    QString infoText = QString("frame %1 / %2")
+                            .arg(mCurrentFrame)
+                            .arg(QTime(h,m,s,ms).toString("hh:mm:ss.zzz"));
+    p.setPen(Qt::white);
+    p.drawText(QRect(0,10,width(),height()),Qt::AlignTop | Qt::AlignHCenter, infoText);
 }
 
 // -----------------------------------------------------------

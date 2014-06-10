@@ -23,81 +23,85 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <widget class="Cinema" name="cinema" native="true">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>0</y>
-         <width>601</width>
-         <height>341</height>
-        </rect>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btnPlayBack">
-       <property name="geometry">
-        <rect>
-         <x>100</x>
-         <y>360</y>
-         <width>98</width>
-         <height>27</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>&lt;</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btnPlayFwd">
-       <property name="geometry">
-        <rect>
-         <x>210</x>
-         <y>360</y>
-         <width>98</width>
-         <height>27</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>&gt;</string>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btnPause">
-       <property name="geometry">
-        <rect>
-         <x>310</x>
-         <y>360</y>
-         <width>98</width>
-         <height>27</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>&quot;</string>
-       </property>
-      </widget>
-      <widget class="QSpinBox" name="edtCurrentFrame">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>360</y>
-         <width>91</width>
-         <height>27</height>
-        </rect>
-       </property>
-       <property name="maximum">
-        <number>999999</number>
-       </property>
-      </widget>
-      <widget class="QCheckBox" name="chkLoop">
-       <property name="geometry">
-        <rect>
-         <x>419</x>
-         <y>367</y>
-         <width>97</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>loop</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="Cinema" name="cinema" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QSpinBox" name="edtCurrentFrame">
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+           <property name="maximum">
+            <number>999999</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnPlayBack">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="mpstop.qrc">
+             <normaloff>:/images/play_left.png</normaloff>:/images/play_left.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnPlayFwd">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="mpstop.qrc">
+             <normaloff>:/images/play_right.png</normaloff>:/images/play_right.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="btnPause">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="mpstop.qrc">
+             <normaloff>:/images/play_stop.png</normaloff>:/images/play_stop.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="chkLoop">
+           <property name="text">
+            <string>loop</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
     </item>
     <item>
@@ -163,89 +167,123 @@
        <widget class="QPushButton" name="btnOpen">
         <property name="geometry">
          <rect>
-          <x>40</x>
-          <y>40</y>
-          <width>71</width>
+          <x>20</x>
+          <y>30</y>
+          <width>141</width>
           <height>31</height>
          </rect>
         </property>
         <property name="text">
-         <string>Load</string>
+         <string>Append Images</string>
         </property>
        </widget>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>Output</string>
-       </property>
-       <widget class="QLineEdit" name="edtOutDir">
+       <widget class="QGroupBox" name="groupBox">
         <property name="geometry">
          <rect>
-          <x>40</x>
-          <y>140</y>
-          <width>113</width>
-          <height>27</height>
+          <x>0</x>
+          <y>220</y>
+          <width>182</width>
+          <height>216</height>
          </rect>
         </property>
-       </widget>
-       <widget class="QSpinBox" name="edtVideoWidth">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>30</y>
-          <width>81</width>
-          <height>27</height>
-         </rect>
+        <property name="title">
+         <string>Output</string>
         </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-        <property name="value">
-         <number>1920</number>
-        </property>
-       </widget>
-       <widget class="QSpinBox" name="edtVideoHeight">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>60</y>
-          <width>81</width>
-          <height>27</height>
-         </rect>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-        <property name="value">
-         <number>1080</number>
-        </property>
-       </widget>
-       <widget class="QSpinBox" name="edtVideoFps">
-        <property name="geometry">
-         <rect>
-          <x>40</x>
-          <y>90</y>
-          <width>81</width>
-          <height>27</height>
-         </rect>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>240</number>
-        </property>
-        <property name="value">
-         <number>12</number>
-        </property>
+        <widget class="QLineEdit" name="edtOutDir">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>150</y>
+           <width>161</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        <widget class="QSpinBox" name="edtVideoWidth">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>30</y>
+           <width>81</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>10000</number>
+         </property>
+         <property name="value">
+          <number>1920</number>
+         </property>
+        </widget>
+        <widget class="QSpinBox" name="edtVideoHeight">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>60</y>
+           <width>81</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>10000</number>
+         </property>
+         <property name="value">
+          <number>1080</number>
+         </property>
+        </widget>
+        <widget class="QSpinBox" name="edtVideoFps">
+         <property name="geometry">
+          <rect>
+           <x>40</x>
+           <y>90</y>
+           <width>81</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+         <property name="minimum">
+          <number>1</number>
+         </property>
+         <property name="maximum">
+          <number>240</number>
+         </property>
+         <property name="value">
+          <number>12</number>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="btnChooseOutDir">
+         <property name="geometry">
+          <rect>
+           <x>80</x>
+           <y>180</y>
+           <width>91</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Choose</string>
+         </property>
+        </widget>
        </widget>
       </widget>
      </item>
@@ -277,6 +315,8 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="mpstop.qrc"/>
+ </resources>
  <connections/>
 </ui>

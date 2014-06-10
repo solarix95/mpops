@@ -36,3 +36,8 @@ void SelectionModel::removed(int index)
         }
     }
 }
+
+void SelectionModel::select(int index)
+{
+    select(index,true);
+}

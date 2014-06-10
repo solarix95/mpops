@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     selectionmodel.cc \
     cinema.cc \
     workerthread.cc \
-    defsettings.cc
+    defsettings.cc \
+    renderer.cc
 
 HEADERS  += mainwindow.h \
     movie.h \
@@ -30,6 +31,8 @@ HEADERS  += mainwindow.h \
     selectionmodel.h \
     cinema.h \
     workerthread.h \
-    defsettings.h
+    defsettings.h \
+    renderer.h
 
+RESOURCES += mpstop.qrc
 FORMS    += mainwindow.ui

@@ -25,6 +25,7 @@ public:
 
 private slots:
     void openFrames();
+    void selectOutDir();
     void updateFrameIndex(int frm);
     void updateRenderButton(bool isEnabled);
     void restoreWindowState();

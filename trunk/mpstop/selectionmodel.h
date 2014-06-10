@@ -20,6 +20,7 @@ signals:
 
 
 public slots:
+    void select(int index);
     void select(int index, bool deselectOthers);
     void deselect(int index);
     void removed(int index);
