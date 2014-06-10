@@ -17,11 +17,9 @@ Thumbnail::Thumbnail(Movie *movie, int frameIndex, SelectionModel *selections) :
 {
     Q_ASSERT(movie);
 
-    qDebug() << "CREATED" << frameIndex;
     mMovie      = movie;
     mSelections = selections;
     mId         = frameIndex;
-
     connect(mSelections,SIGNAL(changed(int)), this, SLOT(redraw(int)));
     connect(mMovie,SIGNAL(frameChanged(int)), this, SLOT(redraw(int)));
     connect(mMovie, SIGNAL(frameDeleted(int)), this, SLOT(redraw()));
@@ -57,7 +55,6 @@ void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 void Thumbnail::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_ASSERT(mSelections);
-    qDebug() << "MOUSE PRES";
     mSelections->select(mId, !(event->modifiers() & Qt::ControlModifier));
 }
 

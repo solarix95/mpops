@@ -30,7 +30,14 @@ private slots:
     void updateRenderButton(bool isEnabled);
     void restoreWindowState();
 
+    // Menu-Actions:
+    void saveProject();
+    void saveAsProject();
+    void newProject();
+
 private:
+    void setupMenu();
+
     Ui::MainWindow *ui;
 
     Movie          *mMovie;
