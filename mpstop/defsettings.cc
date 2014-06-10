@@ -1,5 +1,6 @@
 #include "defsettings.h"
 #include <QSettings>
+#include <QDir>
 
 DefSettings::DefSettings(QObject *parent) :
     QObject(parent)
@@ -137,7 +138,7 @@ void DefSettings::load()
      mDefaultFps    = settings.value("video/fps",12).toInt();
 
      mLastInDir     = settings.value("main/lastInDir").toString();
-     mLastOutDir    = settings.value("main/lastOutDir").toString();
+     mLastOutDir    = settings.value("main/lastOutDir",QDir::tempPath()).toString();
 
      mLastMainPos   = settings.value("main/lastpos",QPoint(10,10)).toPoint();
      mLastMainSize  = settings.value("main/lastsize",QSize(800,600)).toSize();

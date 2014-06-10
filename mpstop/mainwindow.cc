@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->btnOpen, SIGNAL(clicked()), this, SLOT(openFrames()));
+    connect(ui->btnChooseOutDir, SIGNAL(clicked()), this, SLOT(selectOutDir()));
 
     mIsInitialized = false;
     mMovie = new Movie();
@@ -23,11 +24,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->timeLineView->setScene(mScene);
     ui->cinema->setMovie(mMovie);
+    ui->cinema->playLoop(mSettings.playerLoop());
 
     connect(ui->btnPlayFwd, SIGNAL(clicked()), ui->cinema, SLOT(playFwd()));
     connect(ui->btnPlayBack, SIGNAL(clicked()), ui->cinema, SLOT(playBack()));
     connect(ui->btnPause, SIGNAL(clicked()), ui->cinema, SLOT(pause()));
     connect(ui->cinema, SIGNAL(currentFrame(int)), this, SLOT(updateFrameIndex(int)));
+    connect(ui->cinema, SIGNAL(currentFrame(int)), &mSelections, SLOT(select(int)));
     connect(ui->edtCurrentFrame,SIGNAL(valueChanged(int)), ui->cinema, SLOT(setFrame(int)));
 
     connect(&mSelections, SIGNAL(selected(int)), ui->cinema, SLOT(setFrame(int)));
@@ -43,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->edtVideoWidth->setValue(mSettings.defaultVideoWidth());
     ui->edtVideoHeight->setValue(mSettings.defaultVideoHeight());
+    ui->edtOutDir->setText(mSettings.lastOutDir());
+
     connect(ui->edtVideoHeight, SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoHeight(int)));
     connect(ui->edtVideoWidth , SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoWidth(int)));
     connect(ui->edtVideoFps   , SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoFps(int)));
@@ -53,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mThread.start(mMovie);
 
     QTimer::singleShot(1,this, SLOT(restoreWindowState()));
+
 }
 
 MainWindow::~MainWindow()
@@ -80,6 +86,15 @@ void MainWindow::openFrames()
     if (files.count() > 0) {
         mMovie->addFrames(files);
         mSettings.setLastInDir(files.first());
+    }
+}
+
+void MainWindow::selectOutDir()
+{
+    QString outDir = QFileDialog::getExistingDirectory(this,tr("Select output directory"),mSettings.lastOutDir());
+    if (!outDir.isEmpty()) {
+        mSettings.setLastOutDir(outDir);
+        ui->edtOutDir->setText(outDir);
     }
 }
 
