@@ -23,8 +23,8 @@ public:
     int  fps() const;
 
 
-
     void     addFrames(const QStringList &fileList);
+    void     clear();
 
     FrameType type(int frame) const;
     QImage  *thumbNail(int frame) const;

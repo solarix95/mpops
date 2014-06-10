@@ -5,7 +5,6 @@
 TimeLine::TimeLine(QWidget *parent) :
     QGraphicsView(NULL,parent)
 {
-    qDebug() << "CREATED";
 }
 
 void TimeLine::wheelEvent(QWheelEvent *event)

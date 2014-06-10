@@ -51,7 +51,6 @@ void Cinema::pause()
 }
 
 // -----------------------------------------------------------
-
 void Cinema::playLoop(bool doLoop)
 {
     mLoop = doLoop;
@@ -61,6 +60,7 @@ void Cinema::playLoop(bool doLoop)
 void Cinema::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    p.setPen(Qt::black);
     p.setBrush(Qt::black);
     p.drawRect(rect());
 
@@ -70,7 +70,7 @@ void Cinema::paintEvent(QPaintEvent *)
     if (!mMovie->rendered(mCurrentFrame) || mMovie->rendered(mCurrentFrame)->isNull())
         return;
 
-    QImage img = mMovie->rendered(mCurrentFrame)->scaled(width()-10,height()-10,Qt::KeepAspectRatio);
+    QImage img = mMovie->rendered(mCurrentFrame)->scaled(width()-10,height()-70,Qt::KeepAspectRatio);
     p.drawImage((width()-img.width())/2,(height()-img.height())/2,img);
 
     int msec = mCurrentFrame/(double)mMovie->fps() * 1000;

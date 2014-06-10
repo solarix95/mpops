@@ -93,6 +93,16 @@ void Movie::addFrames(const QStringList &fileList)
         emit frameAppended(i);
 }
 
+// -----------------------------------------------------------
+void Movie::clear()
+{
+    while (mFrames.count() > 0) {
+        delete mFrames.takeFirst();
+        emit frameDeleted(0);
+    }
+}
+
+// -----------------------------------------------------------
 Movie::FrameType Movie::type(int frame) const
 {
     Q_ASSERT(QThread::currentThread() == qApp->thread());

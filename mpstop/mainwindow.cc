@@ -1,6 +1,8 @@
 #include <QFileDialog>
 #include <QImageReader>
 #include <QByteArray>
+#include <QMenu>
+#include <QAction>
 #include <QDebug>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -40,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(mMovie, SIGNAL(isComplete(bool)), this, SLOT(updateRenderButton(bool)));
     connect(mMovie, SIGNAL(fpsChanged(int)), ui->edtVideoFps, SLOT(setValue(int)));
+    connect(mMovie, SIGNAL(frameDeleted(int)), &mSelections, SLOT(removed(int)));
     connect(ui->edtVideoFps, SIGNAL(valueChanged(int)), mMovie, SLOT(setFps(int)));
 
     connect(ui->chkLoop, SIGNAL(clicked(bool)), ui->cinema, SLOT(playLoop(bool)));
@@ -57,6 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mThread.start(mMovie);
 
+    setupMenu();
     QTimer::singleShot(1,this, SLOT(restoreWindowState()));
 
 }
@@ -120,4 +124,32 @@ void MainWindow::restoreWindowState()
     ui->chkLoop->setChecked(mSettings.playerLoop());
     mMovie->setVideoHeight(mSettings.defaultVideoHeight());
     mMovie->setVideoWidth(mSettings.defaultVideoWidth());
+}
+
+void MainWindow::saveProject()
+{
+}
+
+void MainWindow::saveAsProject()
+{
+}
+
+void MainWindow::newProject()
+{
+    ui->cinema->pause();
+    mMovie->clear();
+}
+
+void MainWindow::setupMenu()
+{
+   QMenu   *fileMenu = menuBar()->addMenu(tr("&File"));
+   QAction *a;
+   a = fileMenu->addAction("&New");
+   connect(a, SIGNAL(triggered()), this, SLOT(newProject()));
+   a = fileMenu->addAction("&Save");
+   connect(a, SIGNAL(triggered()), this, SLOT(saveProject()));
+   a->setEnabled(false);
+   a = fileMenu->addAction("&SaveAs");
+   connect(a, SIGNAL(triggered()), this, SLOT(saveAsProject()));
+   a->setEnabled(false);
 }
