@@ -64,8 +64,6 @@ void Thumbnail::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------
 void Thumbnail::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    return;
-
     QMenu menu;
     QAction *removeAction  = menu.addAction("Remove");
     QAction *freezeAction  = menu.addAction("FreezeFrame");

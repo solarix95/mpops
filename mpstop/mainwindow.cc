@@ -36,10 +36,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&mThread,SIGNAL(movieCompleteRendered()), mMovie, SLOT(setMovieIsComplete()));
 
     connect(mMovie, SIGNAL(isComplete(bool)), this, SLOT(updateRenderButton(bool)));
+    connect(mMovie, SIGNAL(fpsChanged(int)), ui->edtVideoFps, SLOT(setValue(int)));
+    connect(ui->edtVideoFps, SIGNAL(valueChanged(int)), mMovie, SLOT(setFps(int)));
 
+    connect(ui->chkLoop, SIGNAL(clicked(bool)), ui->cinema, SLOT(playLoop(bool)));
 
-    ui->edtVideoWidth->setValue(mSettings.defaultWidth());
-    ui->edtVideoHeight->setValue(mSettings.defaultHeight());
+    ui->edtVideoWidth->setValue(mSettings.defaultVideoWidth());
+    ui->edtVideoHeight->setValue(mSettings.defaultVideoHeight());
+    connect(ui->edtVideoHeight, SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoHeight(int)));
+    connect(ui->edtVideoWidth , SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoWidth(int)));
+    connect(ui->edtVideoFps   , SIGNAL(valueChanged(int)),&mSettings, SLOT(setDefaultVideoFps(int)));
+    connect(ui->edtVideoHeight, SIGNAL(valueChanged(int)), mMovie, SLOT(setVideoHeight(int)));
+    connect(ui->edtVideoWidth, SIGNAL(valueChanged(int)), mMovie, SLOT(setVideoWidth(int)));
+    connect(ui->chkLoop, SIGNAL(clicked(bool)), &mSettings, SLOT(setPlayerLoop(bool)));
+
     mThread.start(mMovie);
 
     QTimer::singleShot(1,this, SLOT(restoreWindowState()));
@@ -47,7 +57,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    qDebug() << "SAVE" << pos();
     mSettings.setLastMainPos(pos());
     mSettings.setLastMainSize(size());
     mSettings.setLastGeometry(geometry());
@@ -57,12 +66,6 @@ MainWindow::~MainWindow()
     mThread.wait();
 }
 
-bool MainWindow::event(QEvent *event)
-{
-    if (event->type() == QEvent::Polish && !mIsInitialized) {
-    }
-    return QMainWindow::event(event);
-}
 
 void MainWindow::openFrames()
 {
@@ -96,4 +99,10 @@ void MainWindow::restoreWindowState()
     // move(mSettings.lastMainPos());
     qDebug() << pos() << mSettings.lastMainPos();
     setGeometry(mSettings.lastGeometry()); // WTF.. not working..?!?
+    ui->edtVideoHeight->setValue(mSettings.defaultVideoHeight());
+    ui->edtVideoWidth->setValue(mSettings.defaultVideoWidth());
+    ui->edtVideoFps->setValue(mSettings.defaultVideoFps());
+    ui->chkLoop->setChecked(mSettings.playerLoop());
+    mMovie->setVideoHeight(mSettings.defaultVideoHeight());
+    mMovie->setVideoWidth(mSettings.defaultVideoWidth());
 }
