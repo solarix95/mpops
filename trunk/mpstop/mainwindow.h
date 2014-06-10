@@ -22,9 +22,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    
-protected:
-    virtual bool event(QEvent *event);
 
 private slots:
     void openFrames();
@@ -34,7 +31,6 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-
 
     Movie          *mMovie;
     MovieScene     *mScene;

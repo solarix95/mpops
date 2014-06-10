@@ -23,6 +23,7 @@ public slots:
     void playFwd();
     void playBack();
     void pause();
+    void playLoop(bool doLoop);
 
 protected:
     virtual void paintEvent(QPaintEvent *);
@@ -30,6 +31,7 @@ protected:
 private slots:
     void frameChanged(int frameIndex);
     void showNextFrame();
+    void fpsChanged(int newFps);
 
 private:
     Movie  *mMovie;
@@ -37,6 +39,7 @@ private:
     bool    mIsPlaying;
     int     mCurrentFrame;
     int     mPlayDirection;
+    bool    mLoop;
     
 };
 

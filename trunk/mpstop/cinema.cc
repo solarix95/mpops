@@ -8,6 +8,7 @@ Cinema::Cinema(QWidget *parent) :
 {
     mCurrentFrame  = 0;
     mPlayDirection = 0;
+    mLoop          = false;
     connect(&mPlayTimer,SIGNAL(timeout()), this, SLOT(showNextFrame()));
     mPlayTimer.start(1000/12);
 }
@@ -17,6 +18,7 @@ void Cinema::setMovie(Movie *movie)
 {
     mMovie = movie;
     connect(mMovie, SIGNAL(frameChanged(int)), this, SLOT(frameChanged(int)));
+    connect(mMovie, SIGNAL(fpsChanged(int)), this, SLOT(fpsChanged(int)));
 }
 
 // -----------------------------------------------------------
@@ -45,6 +47,13 @@ void Cinema::playBack()
 void Cinema::pause()
 {
     mPlayDirection = 0;
+}
+
+// -----------------------------------------------------------
+
+void Cinema::playLoop(bool doLoop)
+{
+    mLoop = doLoop;
 }
 
 // -----------------------------------------------------------
@@ -78,15 +87,29 @@ void Cinema::showNextFrame()
 
     int nextFrame = mCurrentFrame + mPlayDirection;
     if (nextFrame < 0) {
-        nextFrame = 0;
-        pause();
+        if (mLoop) {
+            nextFrame = mMovie->frameCount() - 1;
+        } else {
+            nextFrame = 0;
+            pause();
+        }
     }
     if (mMovie && nextFrame >= mMovie->frameCount()) {
-        nextFrame = mMovie->frameCount() - 1;
-        pause();
+        if (mLoop) {
+            nextFrame = 0;
+        } else {
+            nextFrame = mMovie->frameCount() - 1;
+            pause();
+        }
     }
     if (nextFrame != mCurrentFrame) {
         setFrame(nextFrame);
     }
 
+}
+
+// -----------------------------------------------------------
+void Cinema::fpsChanged(int newFps)
+{
+    mPlayTimer.start(1000/newFps);
 }

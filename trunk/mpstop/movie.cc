@@ -10,6 +10,7 @@ Movie::Movie(QObject *parent) :
     QObject(parent)
 {
     mTopFrameIdent = 1;
+    mFps           = 12;
 }
 
 // -----------------------------------------------------------
@@ -22,6 +23,42 @@ int Movie::frameCount() const
 }
 
 // -----------------------------------------------------------
+int Movie::fps() const
+{
+    return mFps;
+}
+
+// -----------------------------------------------------------
+void Movie::setFps(int fps)
+{
+    Q_ASSERT(mFps > 0);
+    if (fps == mFps)
+        return;
+
+    mFps = fps;
+    emit fpsChanged(mFps);
+}
+
+// -----------------------------------------------------------
+void Movie::setVideoWidth(int w)
+{
+    lock();
+    mRenderSize.setWidth(w);
+    unlock();
+    resetRendering();
+}
+
+// -----------------------------------------------------------
+void Movie::setVideoHeight(int h)
+{
+    lock();
+    mRenderSize.setHeight(h);
+    unlock();
+    resetRendering();
+
+}
+
+// -----------------------------------------------------------
 QSize Movie::thumbSize()
 {
     return QSize(70,70);
@@ -30,7 +67,10 @@ QSize Movie::thumbSize()
 // -----------------------------------------------------------
 QSize Movie::renderSize()
 {
-    return QSize(1280,720);
+    lock();
+    QSize ret = mRenderSize;
+    unlock();
+    return ret;
 }
 
 // -----------------------------------------------------------
@@ -141,6 +181,18 @@ void Movie::lock() const
 void Movie::unlock() const
 {
     const_cast<Movie*>(this)->mMutex.unlock();
+}
+
+// -----------------------------------------------------------
+
+void Movie::resetRendering()
+{
+    lock();
+    for (int i=0; i<mFrames.count(); i++) {
+        *mFrames[i]->rendered = QImage();
+    }
+    unlock();
+    emit isComplete(false);
 }
 
 // -----------------------------------------------------------

@@ -20,6 +20,9 @@ public:
     explicit Movie(QObject *parent = 0);
     
     int  frameCount() const;
+    int  fps() const;
+
+
 
     void     addFrames(const QStringList &fileList);
 
@@ -33,7 +36,7 @@ public:
 
 
     static QSize thumbSize();
-    static QSize renderSize();
+    QSize renderSize();
 
 signals:
     void frameAppended(int index);
@@ -41,6 +44,7 @@ signals:
     void frameDeleted(int index);
     void frameChanged(int index);
     void isComplete(bool complete);
+    void fpsChanged(int newFps);
     
 public slots:
     // Thread-Anwsers:
@@ -51,10 +55,14 @@ public slots:
     // GUI-Request:
     void addFreezeFrame(int startIndex);
     void removeFrame(int startIndex);
+    void setFps(int fps);
+    void setVideoWidth(int w);
+    void setVideoHeight(int h);
 
 private:
     void lock() const;
     void unlock() const;
+    void resetRendering();
 
     typedef QSharedPointer<QImage> ImagePtr;
 
@@ -71,6 +79,8 @@ private:
     QList<Frame*>  mFrames;
     QMutex         mMutex;
     qint64         mTopFrameIdent;
+    int            mFps;
+    QSize          mRenderSize;
 };
 
 #endif // MOVIE_H

@@ -92,7 +92,7 @@ bool WorkerThread::render(int frameIndex, qint64 frameId, qint32 type, const QSt
     }
 
     if (!img.isNull()) {
-        img = img.scaled(Movie::renderSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
+        img = img.scaled(mMovie->renderSize(),Qt::KeepAspectRatio,Qt::SmoothTransformation);
         emit rendered(frameIndex,frameId,img);
     }
 

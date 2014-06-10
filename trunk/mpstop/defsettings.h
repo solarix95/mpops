@@ -19,9 +19,11 @@ public:
      void setLastOutDir(const QString &inDir);
     QString lastOutDir() const;
 
-    int defaultWidth() const;
-    int defaultHeight() const;
-    int defaultFps() const;
+
+    int defaultVideoWidth() const;
+    int defaultVideoHeight() const;
+    int defaultVideoFps() const;
+
 
     void   setLastMainPos(QPoint p);
     QPoint lastMainPos() const;
@@ -31,9 +33,17 @@ public:
     void   setLastGeometry(QRect geo);
     QRect  lastGeometry() const;
 
+
+    bool playerLoop() const;
+
 signals:
     
 public slots:
+    void setDefaultVideoWidth(int width);
+    void setDefaultVideoHeight(int height);
+    void setDefaultVideoFps(int fps);
+    void setPlayerLoop(bool loop);
+
     void save();
     void load();
 
@@ -43,6 +53,8 @@ private:
     int       mDefaultWidth;
     int       mDefaultHeight;
     int       mDefaultFps;
+
+    bool      mPlayerLoop;
 
     QPoint    mLastMainPos;
     QSize     mLastMainSize;

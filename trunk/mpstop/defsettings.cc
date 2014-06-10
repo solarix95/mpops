@@ -33,17 +33,41 @@ QString DefSettings::lastOutDir() const
     return mLastOutDir;
 }
 
-int DefSettings::defaultWidth() const
+void DefSettings::setDefaultVideoWidth(int width)
+{
+    mDefaultWidth = width;
+    save();
+}
+
+int DefSettings::defaultVideoWidth() const
 {
     return mDefaultWidth;
 }
 
-int DefSettings::defaultHeight() const
+void DefSettings::setDefaultVideoHeight(int height)
+{
+    mDefaultHeight = height;
+    save();
+}
+
+int DefSettings::defaultVideoHeight() const
 {
     return mDefaultHeight;
 }
 
-int DefSettings::defaultFps() const
+void DefSettings::setDefaultVideoFps(int fps)
+{
+    mDefaultFps = fps;
+    save();
+}
+
+void DefSettings::setPlayerLoop(bool loop)
+{
+    mPlayerLoop = loop;
+    save();
+}
+
+int DefSettings::defaultVideoFps() const
 {
     return mDefaultFps;
 }
@@ -81,6 +105,11 @@ QRect DefSettings::lastGeometry() const
     return mLastMainGeometry;
 }
 
+bool DefSettings::playerLoop() const
+{
+    return mPlayerLoop;
+}
+
 void DefSettings::save()
 {
      QSettings settings("MPOps", "mpstop");
@@ -94,6 +123,8 @@ void DefSettings::save()
      settings.setValue("main/lastpos",mLastMainPos);
      settings.setValue("main/lastsize",mLastMainSize);
      settings.setValue("main/lastgeometry",mLastMainGeometry);
+
+     settings.setValue("player/loop",mPlayerLoop);
 }
 
 
@@ -112,4 +143,6 @@ void DefSettings::load()
      mLastMainSize  = settings.value("main/lastsize",QSize(800,600)).toSize();
 
      mLastMainGeometry = settings.value("main/lastgeometry",QRect(10,10,800,600)).toRect();
+
+     mPlayerLoop       = settings.value("player/loop", false).toBool();
 }
