@@ -18,11 +18,9 @@ MovieScene::MovieScene(QObject *parent, Movie *movie, SelectionModel *selections
 void MovieScene::createMovieThumbnail(int index)
 {
     mThumbs     << ThumbnailPtr(new Thumbnail(mMovie,mThumbs.count(),mSelections));
-
     addItem(mThumbs.last().data());
     connect(mThumbs.last().data(), SIGNAL(freezeFrameRequest(int)), mMovie, SLOT(addFreezeFrame(int)));
     connect(mThumbs.last().data(), SIGNAL(deleteFrameRequest(int)), mMovie, SLOT(removeFrame(int)));
-
 }
 
 // -----------------------------------------------------------
