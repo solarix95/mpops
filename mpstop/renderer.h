@@ -4,7 +4,7 @@
 #include <QObject>
 #include "movie.h"
 
-class Renderer : QObject
+class Renderer : public QObject
 {
     Q_OBJECT
 public:
@@ -17,10 +17,13 @@ signals:
     void renderProgress(int proc); // 0..100
     void renderEnd();
 
-protected:
+protected slots:
     // Subclassing:
     void setProgress(int proc);
     void setFinished();
+
+protected:
+    // Subclassing:
     virtual void beginRender() = 0;
     Movie *movie();
 

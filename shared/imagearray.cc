@@ -34,16 +34,18 @@ ImageArray::~ImageArray()
 //---------------------------------------------------------------
 void ImageArray::setVideoSource(const QString &videosource)
 {
+    qDebug() << videosource;
     if (videosource.isEmpty())
         return;
 
     if (validateExternalImage(videosource)) {
         mSource        = ImageList;
-        mExternalFiles = expandTemplateName(videosource);
+        mExternalFiles = videosource.contains('%') ? expandTemplateName(videosource) : QStringList() << videosource;
         mFrameIndex    = 0;
         mIsValid       = !mExternalFiles.isEmpty();
     } else {
 #ifdef WITH_OPENCV
+        qDebug() << "OPENCV";
         mSource       = VideoFile;
         mCvCapture    = cvCreateFileCapture(videosource.toAscii().data());
         mFrameIndex   = 0;
@@ -74,6 +76,7 @@ bool ImageArray::appendSingleFrame(const QString &externalFileName)
 bool ImageArray::appendSingleFrames(const QStringList &externalFileNames)
 {
     foreach(const QString &nextFrame,externalFileNames) {
+        qDebug() << nextFrame;
         if (!appendSingleFrame(nextFrame))
             return false;
     }
@@ -167,7 +170,7 @@ bool ImageArray::validateExternalImage(const QString &fileName)
 {
     static QList<QByteArray> formats = QImageReader::supportedImageFormats();
     foreach(QByteArray nextFormat, formats)
-        if (fileName.endsWith(QString(".%1").arg(QString(nextFormat))))
+        if (fileName.toLower().endsWith(QString(".%1").arg(QString(nextFormat.toLower()))))
             return true;
     return false;
 }
