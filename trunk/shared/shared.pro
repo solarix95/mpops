@@ -11,13 +11,15 @@ HEADERS += \
         ../shared/imageview.h \
         ../shared/image.h \
         ../shared/imagearray.h \
-        ../shared/fileimage.h
+        ../shared/fileimage.h \
+        ../shared/cinelerratoc.h
 
 SOURCES += \
 	../shared/geometrypicker.cc \
         ../shared/imageview.cc \
         ../shared/image.cc \
         ../shared/imagearray.cc \
-    ../shared/fileimage.cc
+        ../shared/fileimage.cc \
+        ../shared/cinelerratoc.cc
 
 FORMS += ../shared/forms/geometrypicker.ui

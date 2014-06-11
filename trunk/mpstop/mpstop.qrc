@@ -8,5 +8,6 @@
         <file>images/play_right.png</file>
         <file>images/play_stop.png</file>
         <file>darkorange.qss</file>
+        <file>images/splash.png</file>
     </qresource>
 </RCC>

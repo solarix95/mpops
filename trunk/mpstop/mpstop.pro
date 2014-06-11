@@ -10,6 +10,7 @@ TARGET = mpstop
 TEMPLATE = app
 CONFIG += debug
 
+include(../shared/shared.pro)
 
 SOURCES += main.cpp\
         mainwindow.cc \
@@ -21,7 +22,8 @@ SOURCES += main.cpp\
     cinema.cc \
     workerthread.cc \
     defsettings.cc \
-    renderer.cc
+    renderer.cc \
+    tocrenderer.cc
 
 HEADERS  += mainwindow.h \
     movie.h \
@@ -32,7 +34,8 @@ HEADERS  += mainwindow.h \
     cinema.h \
     workerthread.h \
     defsettings.h \
-    renderer.h
+    renderer.h \
+    tocrenderer.h
 
 RESOURCES += mpstop.qrc
 FORMS    += mainwindow.ui

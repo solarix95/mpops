@@ -3,8 +3,10 @@
 
 #include <QMainWindow>
 #include <QGraphicsScene>
+#include <QSplashScreen>
 #include "selectionmodel.h"
 #include "workerthread.h"
+#include "renderer.h"
 #include "defsettings.h"
 
 namespace Ui {
@@ -26,6 +28,7 @@ public:
 private slots:
     void openFrames();
     void selectOutDir();
+    void render();
     void updateFrameIndex(int frm);
     void updateRenderButton(bool isEnabled);
     void restoreWindowState();
@@ -35,13 +38,22 @@ private slots:
     void saveAsProject();
     void newProject();
 
+    // Render-State:
+    void beginRender();
+    void renderProgress(int proc);
+    void endRender();
+
 private:
     void setupMenu();
+    void setupTocRenderer();
+
 
     Ui::MainWindow *ui;
 
     Movie          *mMovie;
     MovieScene     *mScene;
+    Renderer       *mRenderer;
+    QSplashScreen  *mRenderSplash;
     DefSettings     mSettings;
     SelectionModel  mSelections;
     WorkerThread    mThread;

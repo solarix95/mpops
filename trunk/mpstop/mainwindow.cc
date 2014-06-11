@@ -10,7 +10,9 @@
 #include "movie.h"
 #include "moviescene.h"
 #include "cinema.h"
+#include "tocrenderer.h"
 
+// -----------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -21,8 +23,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnChooseOutDir, SIGNAL(clicked()), this, SLOT(selectOutDir()));
 
     mIsInitialized = false;
-    mMovie = new Movie();
-    mScene = new MovieScene(this, mMovie,&mSelections);
+    mRenderer = NULL;
+    mRenderSplash = NULL;
+    mMovie    = new Movie();
+    mScene    = new MovieScene(this, mMovie,&mSelections);
 
     ui->timeLineView->setScene(mScene);
     ui->cinema->setMovie(mMovie);
@@ -31,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnPlayFwd, SIGNAL(clicked()), ui->cinema, SLOT(playFwd()));
     connect(ui->btnPlayBack, SIGNAL(clicked()), ui->cinema, SLOT(playBack()));
     connect(ui->btnPause, SIGNAL(clicked()), ui->cinema, SLOT(pause()));
+    connect(ui->btnRender, SIGNAL(clicked()), this, SLOT(render()));
     connect(ui->cinema, SIGNAL(currentFrame(int)), this, SLOT(updateFrameIndex(int)));
     connect(ui->cinema, SIGNAL(currentFrame(int)), &mSelections, SLOT(select(int)));
     connect(ui->edtCurrentFrame,SIGNAL(valueChanged(int)), ui->cinema, SLOT(setFrame(int)));
@@ -65,18 +70,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
 }
 
+// -----------------------------------------------------------
 MainWindow::~MainWindow()
 {
     mSettings.setLastMainPos(pos());
     mSettings.setLastMainSize(size());
     mSettings.setLastGeometry(geometry());
 
+    if (mRenderer)
+        delete mRenderer;
+
     delete ui;
     mThread.quit();
     mThread.wait();
 }
 
-
+// -----------------------------------------------------------
 void MainWindow::openFrames()
 {
     QList<QByteArray> formats = QImageReader::supportedImageFormats();
@@ -93,6 +102,7 @@ void MainWindow::openFrames()
     }
 }
 
+// -----------------------------------------------------------
 void MainWindow::selectOutDir()
 {
     QString outDir = QFileDialog::getExistingDirectory(this,tr("Select output directory"),mSettings.lastOutDir());
@@ -102,16 +112,31 @@ void MainWindow::selectOutDir()
     }
 }
 
+// -----------------------------------------------------------
+void MainWindow::render()
+{
+    Q_ASSERT(!mRenderer);
+    setupTocRenderer(); // TODO: multiple renderer?
+    Q_ASSERT(mRenderer);
+    connect(mRenderer, SIGNAL(renderStart()), this, SLOT(beginRender()));
+    connect(mRenderer, SIGNAL(renderEnd()), this, SLOT(endRender()));
+    connect(mRenderer, SIGNAL(renderProgress(int)), this, SLOT(renderProgress(int)));
+    mRenderer->render();
+}
+
+// -----------------------------------------------------------
 void MainWindow::updateFrameIndex(int frm)
 {
     ui->edtCurrentFrame->setValue(frm);
 }
 
+// -----------------------------------------------------------
 void MainWindow::updateRenderButton(bool isEnabled)
 {
     ui->btnRender->setEnabled(isEnabled);
 }
 
+// -----------------------------------------------------------
 void MainWindow::restoreWindowState()
 {
     // resize(mSettings.lastMainSize());
@@ -126,20 +151,52 @@ void MainWindow::restoreWindowState()
     mMovie->setVideoWidth(mSettings.defaultVideoWidth());
 }
 
+// -----------------------------------------------------------
 void MainWindow::saveProject()
 {
 }
 
+// -----------------------------------------------------------
 void MainWindow::saveAsProject()
 {
 }
 
+// -----------------------------------------------------------
 void MainWindow::newProject()
 {
     ui->cinema->pause();
     mMovie->clear();
 }
 
+// -----------------------------------------------------------
+void MainWindow::beginRender()
+{
+    Q_ASSERT(!mRenderSplash);
+    mRenderSplash = new QSplashScreen(this,QPixmap(":/images/splash.png"));
+    mRenderSplash->show();
+    mRenderSplash->showMessage(" Rendering..",Qt::AlignLeft, Qt::white);
+    while (qApp->hasPendingEvents())
+        qApp->processEvents();
+}
+
+// -----------------------------------------------------------
+void MainWindow::renderProgress(int proc)
+{
+    Q_ASSERT(mRenderSplash);
+    mRenderSplash->showMessage(QString(" progress: %1%").arg(proc), Qt::AlignLeft, Qt::white);
+}
+
+// -----------------------------------------------------------
+void MainWindow::endRender()
+{
+    Q_ASSERT(mRenderSplash);
+    delete mRenderSplash;
+    mRenderSplash = NULL;
+    delete mRenderer;
+    mRenderer = NULL;
+}
+
+// -----------------------------------------------------------
 void MainWindow::setupMenu()
 {
    QMenu   *fileMenu = menuBar()->addMenu(tr("&File"));
@@ -152,4 +209,14 @@ void MainWindow::setupMenu()
    a = fileMenu->addAction("&SaveAs");
    connect(a, SIGNAL(triggered()), this, SLOT(saveAsProject()));
    a->setEnabled(false);
+}
+
+// -----------------------------------------------------------
+void MainWindow::setupTocRenderer()
+{
+    Q_ASSERT(!mRenderer);
+
+    TocRenderer *tocRenderer = new TocRenderer(mMovie);
+    tocRenderer->setOutDir(ui->edtOutDir->text());
+    mRenderer = tocRenderer;
 }
