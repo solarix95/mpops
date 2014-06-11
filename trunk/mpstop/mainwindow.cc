@@ -95,7 +95,7 @@ void MainWindow::openFrames()
     }
     filter = QString("Images (%1)").arg(filter.trimmed());
 
-    QStringList files = QFileDialog::getOpenFileNames(this,"Select Images",mSettings.lastInDir(),filter);
+    QStringList files = QFileDialog::getOpenFileNames(this,"Select Images",mSettings.lastInDir(),filter,NULL,QFileDialog::DontUseNativeDialog);
     if (files.count() > 0) {
         mMovie->addFrames(files);
         mSettings.setLastInDir(files.first());
