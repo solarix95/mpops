@@ -218,5 +218,6 @@ void MainWindow::setupTocRenderer()
 
     TocRenderer *tocRenderer = new TocRenderer(mMovie);
     tocRenderer->setOutDir(ui->edtOutDir->text());
+    tocRenderer->setFps(ui->edtVideoFps->value());
     mRenderer = tocRenderer;
 }

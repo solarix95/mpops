@@ -23,7 +23,8 @@ SOURCES += main.cpp\
     workerthread.cc \
     defsettings.cc \
     renderer.cc \
-    tocrenderer.cc
+    tocrenderer.cc \
+    project.cc
 
 HEADERS  += mainwindow.h \
     movie.h \
@@ -35,7 +36,8 @@ HEADERS  += mainwindow.h \
     workerthread.h \
     defsettings.h \
     renderer.h \
-    tocrenderer.h
+    tocrenderer.h \
+    project.h
 
 RESOURCES += mpstop.qrc
 FORMS    += mainwindow.ui

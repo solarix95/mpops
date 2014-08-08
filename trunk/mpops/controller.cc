@@ -27,6 +27,7 @@ Controller::Controller(const Args &args, QObject *parent) :
     mCurrentIndex     = 0;
     mMaxFramesInQueue = qMax(2,args.contExposureFrames);
 
+    qDebug() << "ARGS" << args.fileList;
     if (args.fileList.count() == 1) {
         mImageArray.setVideoSource(args.fileList.first());
     } else
@@ -36,6 +37,7 @@ Controller::Controller(const Args &args, QObject *parent) :
 //---------------------------------------------------------------
 bool Controller::run()
 {
+    qDebug() << mImageArray.isValid();
     if (!mImageArray.isValid())
         return false;
 
@@ -116,16 +118,18 @@ void Controller::queueChanged(OpQueue *queue)
             }
 
             QDir dir;
-            mToc.appendImage(dir.absoluteFilePath(toFileName));
-
             if (withTweens && (mArgs.tweening == "avg")) {
                 Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
                 ImagePtr out(new Image(new QImage(),"")); // TODO: tweenFileName direkt übergeben?
                 queue->addJob(new TweeningAvg(mLastImages.last(),img,out));
                 QString tweenFileName = createFileName(img->frameName(),mJobIndex);
                 queue->addJob(new SaveAndCloseJob(out,tweenFileName));
+                mToc.appendImage(dir.absoluteFilePath(tweenFileName));
                 mJobIndex++;
             }
+
+            mToc.appendImage(dir.absoluteFilePath(toFileName));
+
             mCurrentIndex++;
             mJobIndex++;
             mLastImages << img;
@@ -159,7 +163,8 @@ void Controller::queueChanged(OpQueue *queue)
 //---------------------------------------------------------------
 bool Controller::pickGeometry(ImagePtr firstFrame)
 {
-    if (!firstFrame.isNull())
+    qDebug() << "PICK" << firstFrame.isNull() << mArgs.withCropFrom << mArgs.withCropTo;
+    if (firstFrame.isNull())
         return true;
 
     if (mArgs.withCropFrom && mArgs.fromRect.width() <= 0) {

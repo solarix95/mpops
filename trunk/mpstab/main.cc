@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
       break;
     }
 
-    if (results.count() > QThread::idealThreadCount()) {
+    if (results.count() > /*QThread::idealThreadCount()*/ 0) {
       for (int r=0; r<results.count(); r++) {
         results[r].poi.waitForFinished();
         std::cout << TO_STDSTRING(results[r].imgName) << ": "
