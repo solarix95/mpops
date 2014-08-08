@@ -15,6 +15,7 @@ public:
     explicit TocRenderer(Movie *movie);
     
     void setOutDir(const QString &outDir);
+    void setFps(int fps);
 
 signals:
     void requestNextFrame();
@@ -31,6 +32,7 @@ private:
 
     CinelerraToc mTocFile;
     QString      mOutDir;
+    QString      mTocName;
     int          mFrameIndex;
 };
 
