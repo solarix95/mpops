@@ -12,6 +12,8 @@
 #include "cinema.h"
 #include "tocrenderer.h"
 
+#define MY_TITLE   "Darksuit Stopmotion"
+
 // -----------------------------------------------------------
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -48,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mMovie, SIGNAL(isComplete(bool)), this, SLOT(updateRenderButton(bool)));
     connect(mMovie, SIGNAL(fpsChanged(int)), ui->edtVideoFps, SLOT(setValue(int)));
     connect(mMovie, SIGNAL(frameDeleted(int)), &mSelections, SLOT(removed(int)));
+    connect(mMovie, SIGNAL(dirtyChanged()), this, SLOT(dirtyChanged()));
+    connect(mMovie, SIGNAL(requestFileName(QString*)),this, SLOT(selectProjectName(QString*)));
     connect(ui->edtVideoFps, SIGNAL(valueChanged(int)), mMovie, SLOT(setFps(int)));
 
     connect(ui->chkLoop, SIGNAL(clicked(bool)), ui->cinema, SLOT(playLoop(bool)));
@@ -113,6 +117,14 @@ void MainWindow::selectOutDir()
 }
 
 // -----------------------------------------------------------
+void MainWindow::selectProjectName(QString *name)
+{
+    static QString lastDir;
+    *name = QFileDialog::getSaveFileName(this,tr("Projectname"),lastDir);
+    lastDir = *name;
+}
+
+// -----------------------------------------------------------
 void MainWindow::render()
 {
     Q_ASSERT(!mRenderer);
@@ -154,6 +166,8 @@ void MainWindow::restoreWindowState()
 // -----------------------------------------------------------
 void MainWindow::saveProject()
 {
+    Q_ASSERT(mMovie);
+    mMovie->save();
 }
 
 // -----------------------------------------------------------
@@ -166,6 +180,16 @@ void MainWindow::newProject()
 {
     ui->cinema->pause();
     mMovie->clear();
+}
+
+// -----------------------------------------------------------
+void MainWindow::openProject()
+{
+    QString tocFile = QFileDialog::getOpenFileName(this,tr("Select Cinerella/Blacksuit-TOC"),"","*.toc");
+    if (tocFile.isEmpty())
+        return;
+    Q_ASSERT(mMovie);
+    mMovie->open(tocFile);
 }
 
 // -----------------------------------------------------------
@@ -197,18 +221,19 @@ void MainWindow::endRender()
 }
 
 // -----------------------------------------------------------
+void MainWindow::dirtyChanged()
+{
+    Q_ASSERT(mMovie);
+    setWindowTitle(QString("%1 - %2%3").arg(MY_TITLE).arg(mMovie->name()).arg(mMovie->isDirty() ? "*":""));
+}
+
+// -----------------------------------------------------------
 void MainWindow::setupMenu()
 {
-   QMenu   *fileMenu = menuBar()->addMenu(tr("&File"));
-   QAction *a;
-   a = fileMenu->addAction("&New");
-   connect(a, SIGNAL(triggered()), this, SLOT(newProject()));
-   a = fileMenu->addAction("&Save");
-   connect(a, SIGNAL(triggered()), this, SLOT(saveProject()));
-   a->setEnabled(false);
-   a = fileMenu->addAction("&SaveAs");
-   connect(a, SIGNAL(triggered()), this, SLOT(saveAsProject()));
-   a->setEnabled(false);
+   connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(newProject()));
+   connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openProject()));
+   connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveProject()));
+   connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAsProject()));
 }
 
 // -----------------------------------------------------------

@@ -1,11 +1,18 @@
-../mpops/mpops --out=out1 --resize=320x200 in/*.jpg
-../mpops/mpops --out=out2 --resize=320x200 in/frame_%d.jpg
-../mpops/mpops --out=out3 --rename=image_%3.3d.jpg in/frame_%d.jpg
-../mpops/mpops --out=out4 --rename=image_%3.3d.png in/frame_%d.jpg
-../mpops/mpops --out=out5 --resize=320x200 --format=png --create-toc  in/*.jpg
-../mpops/mpops --out=out6 --rename=frame_%d.png --tweening=avg in/*.jpg
-../mpops/mpops --out=out7 --format=bmp in/*.jpg
-../mpops/mpops --out=out8 --format=tiff in/*.jpg
-../mpops/mpops --out=out9 --format=png in/test.mpg
-../mpops/mpops --out=out10 --format=png in/test.mpg
-../mpops/mpops --out=out11 --cont-exposure-frames=10 --format=png in/test.mpg
+../mpops/mpops --out=out01_resize --resize=320x200 in/*.jpg
+../mpops/mpops --out=out02_resize --resize=320x200 in/frame_%d.jpg
+../mpops/mpops --out=out03_rename --rename=image_%3.3d.jpg in/frame_%d.jpg
+../mpops/mpops --out=out04_convert --rename=image_%3.3d.png in/frame_%d.jpg
+../mpops/mpops --out=out05_convert --resize=320x200 --format=png in/*.jpg
+../mpops/mpops --out=out06_tweening --rename=frame_%d.png --tweening=avg in/*.jpg
+../mpops/mpops --out=out07_jpg2bmp  --format=bmp in/*.jpg
+../mpops/mpops --out=out08_jpg2tiff --format=tiff in/*.jpg
+../mpops/mpops --out=out09_mpg2png  --format=png in/test.mpg
+../mpops/mpops --out=out10_mpg2png  --format=png in/test.mpg
+../mpops/mpops --out=out11_exposure --cont-exposure-frames=3 --format=png in/test.mpg
+../mpops/mpops --out=out12_select --select=1/2  in/*.jpg
+../mpops/mpops --out=out13_select --select=1/1  in/*.jpg
+../mpops/mpops --out=out14_select --select=1/2 --rename=frame_%d.jpg  in/*.jpg
+../mpops/mpops --out=out15_select --select=2/2 --rename=frame_%d.jpg  in/*.jpg
+../mpops/mpops --out=out16_select --select=2/1 --rename=frame_%d.jpg  in/*.jpg
+../mpops/mpops --out=out17_toc    --toc        --rename=frame_%d.png --resize=1920x1080 in/*.jpg
+../mpops/mpops --out=out18_toc    --toc=out18  --rename=frame_%d.png --resize=1920x1080 in/*.jpg

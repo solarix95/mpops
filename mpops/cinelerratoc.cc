@@ -16,10 +16,12 @@ PNGLIST
 ...
 \*---------------------------------------------------------------------------------------*/
 
+#define EXT ".toc"
+
 //---------------------------------------------------------------
 CinelerraToc::CinelerraToc()
 {
-  mTocFileName  = "content.toc";
+  mTocFileName  = "content"EXT;
   mFps          = 24;
 }
 
@@ -27,6 +29,8 @@ CinelerraToc::CinelerraToc()
 void CinelerraToc::setFilename(const QString &tocFileName)
 {
   mTocFileName = tocFileName;
+  if (!mTocFileName.endsWith(EXT))
+      mTocFileName.append(EXT);
 }
 
 //---------------------------------------------------------------

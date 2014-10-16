@@ -28,6 +28,8 @@ public:
 private slots:
     void openFrames();
     void selectOutDir();
+    void selectProjectName(QString *name);
+
     void render();
     void updateFrameIndex(int frm);
     void updateRenderButton(bool isEnabled);
@@ -37,16 +39,19 @@ private slots:
     void saveProject();
     void saveAsProject();
     void newProject();
+    void openProject();
 
     // Render-State:
     void beginRender();
     void renderProgress(int proc);
     void endRender();
 
+    // Movie Events
+    void dirtyChanged();
+
 private:
     void setupMenu();
     void setupTocRenderer();
-
 
     Ui::MainWindow *ui;
 

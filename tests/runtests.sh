@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -rf out*
+
 cnt=1
 while read nextCmd
 do
