@@ -33,6 +33,7 @@ private slots:
     void render();
     void updateFrameIndex(int frm);
     void updateRenderButton(bool isEnabled);
+    void updateRenderSize(QSize toSize);
     void restoreWindowState();
 
     // Menu-Actions:

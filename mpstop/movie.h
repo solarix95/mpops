@@ -26,7 +26,8 @@ public:
 
     void     addFrames(const QStringList &fileList);
     void     clear();
-    void     save();
+    bool     save();
+    bool     saveAs(const QString &projectName);
     bool     open(const QString &projectName);
 
     FrameType type(int frame) const;
@@ -48,6 +49,7 @@ signals:
     void frameChanged(int index);
     void isComplete(bool complete);
     void fpsChanged(int newFps);
+    void sizeChanged(QSize newSize);
     void dirtyChanged();
     void requestFileName(QString *name);
     

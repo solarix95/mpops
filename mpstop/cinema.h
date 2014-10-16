@@ -40,6 +40,7 @@ private:
     int     mCurrentFrame;
     int     mPlayDirection;
     bool    mLoop;
+    bool    mFirstStart;
     
 };
 

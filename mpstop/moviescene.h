@@ -14,10 +14,7 @@ class MovieScene : public QGraphicsScene
     Q_OBJECT
 public:
     explicit MovieScene(QObject *parent, Movie *movie, SelectionModel *selections);
-    
-    
-public slots:
-    
+
 private slots:
     void createMovieThumbnail(int index);
     void removeMovieThumbnail(int index);

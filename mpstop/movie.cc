@@ -9,7 +9,9 @@
 #include "movie.h"
 #include "shared/cinelerratoc.h"
 
-// -----------------------------------------------------------
+#define TOC_FREEZE_HINT "#BLACKSUIT-FREEZE"
+
+// ----------------------------------------------------------------------------
 Movie::Movie(QObject *parent) :
     QObject(parent)
 {
@@ -18,7 +20,7 @@ Movie::Movie(QObject *parent) :
     mIsDirty       = false;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 int Movie::frameCount() const
 {
     lock();
@@ -27,13 +29,13 @@ int Movie::frameCount() const
     return ret;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 int Movie::fps() const
 {
     return mFps;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 QString Movie::name() const
 {
     if (mProjectName.isEmpty()) {
@@ -44,13 +46,13 @@ QString Movie::name() const
     return parts.last();
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 bool Movie::isDirty() const
 {
     return mIsDirty;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::setFps(int fps)
 {
     Q_ASSERT(mFps > 0);
@@ -61,7 +63,7 @@ void Movie::setFps(int fps)
     emit fpsChanged(mFps);
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::setVideoWidth(int w)
 {
     lock();
@@ -70,7 +72,7 @@ void Movie::setVideoWidth(int w)
     resetRendering();
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::setVideoHeight(int h)
 {
     lock();
@@ -79,7 +81,7 @@ void Movie::setVideoHeight(int h)
     resetRendering();
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::setVideoSize(QSize s)
 {
     lock();
@@ -88,13 +90,13 @@ void Movie::setVideoSize(QSize s)
     resetRendering();
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 QSize Movie::thumbSize()
 {
     return QSize(70,70);
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 QSize Movie::renderSize()
 {
     lock();
@@ -103,7 +105,7 @@ QSize Movie::renderSize()
     return ret;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::addFrames(const QStringList &fileList)
 {
     lock();
@@ -125,7 +127,7 @@ void Movie::addFrames(const QStringList &fileList)
     setDirty(true);
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
 void Movie::clear()
 {
     lock();
@@ -138,22 +140,61 @@ void Movie::clear()
     setDirty(false);
 }
 
-// -----------------------------------------------------------
-void Movie::save()
+// ----------------------------------------------------------------------------
+bool Movie::save()
 {
     if (mProjectName.isEmpty()) {
         emit requestFileName(&mProjectName);
     }
+    if (mProjectName.isEmpty())
+        return false;
+
+    CinelerraToc toc;
+    toc.setFilename(mProjectName);
+    toc.setFps(mFps);
+    toc.setSize(mRenderSize);
+    foreach(Frame *next, mFrames) {
+        Q_ASSERT(next);
+        switch(next->type) {
+        case   FileSource :
+            toc.appendImage(next->source);
+            break;
+
+        case FreezeFrame :
+            toc.appendImage(TOC_FREEZE_HINT);
+            break;
+        }
+    }
+    bool done = toc.save();
+    if (done)
+        setDirty(false);
+    return done;
 }
 
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------
+bool Movie::saveAs(const QString &projectName)
+{
+    mProjectName = projectName;
+    return save();
+}
+
+// ----------------------------------------------------------------------------
 bool Movie::open(const QString &projectName)
 {
     clear();
     CinelerraToc toc;
     connect(&toc, SIGNAL(parsedFile(QString)), this, SLOT(addFrame(QString)));
     connect(&toc, SIGNAL(parsedComment(QString)), this, SLOT(handleTocComment(QString)));
-    return toc.load(projectName);
+    mProjectName = projectName;
+    if (toc.load(projectName)) {
+        mFps = toc.fps();
+        emit fpsChanged(mFps);
+        mRenderSize = toc.size();
+        emit sizeChanged(mRenderSize);
+        setDirty(false);
+        return true;
+    }
+    return false;
 }
 
 // -----------------------------------------------------------
@@ -244,7 +285,7 @@ void Movie::addFrame(const QString &filename)
 // -----------------------------------------------------------
 void Movie::handleTocComment(const QString &comment)
 {
-    if (comment == "#BLACKSUIT-FREEZE")
+    if (comment == TOC_FREEZE_HINT)
         addFreezeFrame();
 }
 

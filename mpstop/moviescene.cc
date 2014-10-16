@@ -1,5 +1,7 @@
 #include <QDebug>
 #include <QTimer>
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
 #include "moviescene.h"
 #include "movie.h"
 
@@ -28,3 +30,4 @@ void MovieScene::removeMovieThumbnail(int index)
 {
     mThumbs.takeLast();
 }
+

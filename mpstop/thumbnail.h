@@ -18,8 +18,11 @@ class Thumbnail : public QObject, public QGraphicsItem
 public:
     explicit Thumbnail(Movie *movie, int frameIndex, SelectionModel *selections);
 
+    inline int id() const { return mId; }
+
     virtual QRectF boundingRect() const;
     virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
 
 
 signals:
