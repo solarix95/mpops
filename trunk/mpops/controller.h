@@ -30,6 +30,7 @@ typedef struct sArgs
   QString         tweening;
   bool            printHelp;
   bool            withToc;    // Create Cinelerra-TOC
+  QString         tocName;
 
   // --add-alpha
   bool            withAlpha;
@@ -42,10 +43,16 @@ typedef struct sArgs
   bool            withContExposure;
   int             contExposureFrames;
 
+  // select
+  bool            withSelect;
+  int             selectInFrames;
+  int             selectIgnFrames;
+
   sArgs() : withResize(false), withCropFrom(false), withCropTo(false),
             threadCount(QThread::idealThreadCount()),
             printHelp(false), withToc(false), withAlpha(false),
-            withContExposure(false),contExposureFrames(-1) {}
+            withContExposure(false),contExposureFrames(-1),
+            withSelect(false),selectInFrames(-1), selectIgnFrames(-1) {}
 } Args;
 
 //---------------------------------------------------------------
@@ -66,12 +73,14 @@ private slots:
     void queueChanged(OpQueue*);
 
 private:
-    bool    pickGeometry(ImagePtr firstFrame);
-    QString createFileName(const QString originalFileName, int frameIndex);
+    ImagePtr selectFrame();
+    bool     pickGeometry(ImagePtr firstFrame);
+    QString  createFileName(const QString originalFileName, int frameIndex);
 
     Args            mArgs;
-    int             mCurrentIndex;
-    int             mJobIndex;
+    int             mOrigIndex;  // original index, before "select"
+    int             mInIndex;    // input index, after "select"
+    int             mOutIndex;   // output index (tweening...)
     QList<OpQueue*> mThreads;
     CinelerraToc    mToc;
     ImageArray      mImageArray;

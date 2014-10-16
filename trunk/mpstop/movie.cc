@@ -1,9 +1,13 @@
-#include "movie.h"
+
 #include <QSize>
 #include <QStringList>
 #include <QThread>
 #include <QCoreApplication>
+#include <QDir>
 #include <QDebug>
+
+#include "movie.h"
+#include "shared/cinelerratoc.h"
 
 // -----------------------------------------------------------
 Movie::Movie(QObject *parent) :
@@ -11,6 +15,7 @@ Movie::Movie(QObject *parent) :
 {
     mTopFrameIdent = 1;
     mFps           = 12;
+    mIsDirty       = false;
 }
 
 // -----------------------------------------------------------
@@ -26,6 +31,23 @@ int Movie::frameCount() const
 int Movie::fps() const
 {
     return mFps;
+}
+
+// -----------------------------------------------------------
+QString Movie::name() const
+{
+    if (mProjectName.isEmpty()) {
+        return "<untitled>";
+    }
+    QStringList parts = mProjectName.split(QDir::separator());
+    Q_ASSERT(!parts.isEmpty());
+    return parts.last();
+}
+
+// -----------------------------------------------------------
+bool Movie::isDirty() const
+{
+    return mIsDirty;
 }
 
 // -----------------------------------------------------------
@@ -55,7 +77,15 @@ void Movie::setVideoHeight(int h)
     mRenderSize.setHeight(h);
     unlock();
     resetRendering();
+}
 
+// -----------------------------------------------------------
+void Movie::setVideoSize(QSize s)
+{
+    lock();
+    mRenderSize = s;
+    unlock();
+    resetRendering();
 }
 
 // -----------------------------------------------------------
@@ -91,15 +121,39 @@ void Movie::addFrames(const QStringList &fileList)
     emit isComplete(false);
     for(int i=startIndex; i<(startIndex + fileList.count()); i++)
         emit frameAppended(i);
+
+    setDirty(true);
 }
 
 // -----------------------------------------------------------
 void Movie::clear()
 {
+    lock();
     while (mFrames.count() > 0) {
         delete mFrames.takeFirst();
         emit frameDeleted(0);
     }
+    unlock();
+    mProjectName = "";
+    setDirty(false);
+}
+
+// -----------------------------------------------------------
+void Movie::save()
+{
+    if (mProjectName.isEmpty()) {
+        emit requestFileName(&mProjectName);
+    }
+}
+
+// -----------------------------------------------------------
+bool Movie::open(const QString &projectName)
+{
+    clear();
+    CinelerraToc toc;
+    connect(&toc, SIGNAL(parsedFile(QString)), this, SLOT(addFrame(QString)));
+    connect(&toc, SIGNAL(parsedComment(QString)), this, SLOT(handleTocComment(QString)));
+    return toc.load(projectName);
 }
 
 // -----------------------------------------------------------
@@ -182,6 +236,19 @@ void Movie::setMovieIsComplete()
 }
 
 // -----------------------------------------------------------
+void Movie::addFrame(const QString &filename)
+{
+    addFrames(QStringList() << filename);
+}
+
+// -----------------------------------------------------------
+void Movie::handleTocComment(const QString &comment)
+{
+    if (comment == "#BLACKSUIT-FREEZE")
+        addFreezeFrame();
+}
+
+// -----------------------------------------------------------
 void Movie::lock() const
 {
     const_cast<Movie*>(this)->mMutex.lock();
@@ -203,6 +270,15 @@ void Movie::resetRendering()
     }
     unlock();
     emit isComplete(false);
+}
+
+// -----------------------------------------------------------
+void Movie::setDirty(bool d)
+{
+    if (d != mIsDirty) {
+        mIsDirty = d;
+        emit dirtyChanged();
+    }
 }
 
 // -----------------------------------------------------------
@@ -239,13 +315,15 @@ void Movie::jobRender(int index, qint64 id, QImage result)
 
     if (changed)
         emit frameChanged(index);
-
 }
 
 // -----------------------------------------------------------
 void Movie::addFreezeFrame(int startIndex)
 {
     lock();
+    if (startIndex < 0)
+        startIndex = mFrames.count();
+
     Q_ASSERT(QThread::currentThread() == qApp->thread());
     Q_ASSERT(startIndex >= 0);
     if (startIndex > mFrames.count())
@@ -262,8 +340,10 @@ void Movie::addFreezeFrame(int startIndex)
     unlock();
 
     emit frameInserted(startIndex);
+    setDirty(true);
 }
 
+// -----------------------------------------------------------
 void Movie::removeFrame(int startIndex)
 {
     lock();
@@ -273,4 +353,5 @@ void Movie::removeFrame(int startIndex)
     unlock();
 
     emit frameDeleted(startIndex);
+    setDirty(true);
 }

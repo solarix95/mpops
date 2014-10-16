@@ -22,6 +22,12 @@ GeometryPicker::GeometryPicker(QImage *img, const QString &title, QWidget *paren
 }
 
 //---------------------------------------------------------------
+void GeometryPicker::setReferenceSelection(const QRect &rect)
+{
+    mImageView.setReferenceSelection(rect);
+}
+
+//---------------------------------------------------------------
 QRect GeometryPicker::selection() const
 {
     return mLastSelection;

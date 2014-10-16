@@ -24,12 +24,13 @@ static void s_print_help()
   std::cout << "  --crop-to=geometry"                                << std::endl;
   std::cout << "  --resize=size       : widthxheight"                << std::endl;
   std::cout << "  --out=subdir"                                      << std::endl;
+  std::cout << "  --select=take/skip"                                << std::endl;
   std::cout << "  --format=ext"                                      << std::endl;
   std::cout << "  --tweening=strategy"                               << std::endl;
   std::cout << "  --cont-exposure-frames=framecount"                 << std::endl;
   std::cout << "  --rename=filename-template (sprintf)"              << std::endl;
-  std::cout << "  --threads=count     : default: cpu-count)"         << std::endl;
-  std::cout << "  --create-toc        : creates cinelerra-toc"       << std::endl;
+  std::cout << "  --threads=count     : default: cpu-count"          << std::endl;
+  std::cout << "  --toc(=name)        : creates cinelerra-toc"       << std::endl;
   std::cout << std::endl;
   std::cout << "supported formats: "                                 << std::endl;
 
@@ -48,10 +49,11 @@ static void s_print_help()
   std::cout << "  mpops --resize=800x600 img_%d.jpg"                  << std::endl;
   std::cout << "  mpops --format=png --out=converted *.jpg"           << std::endl;
   std::cout << "  mpops --crop-from=800x600+10+10 --crop-to=80x60 --resize=80x60 *.jpg" << std::endl;
+  std::cout << "  mpops --select=1/2  --out=fast  *.jpg"              << std::endl;
+  std::cout << "  mpops --select=24/1 --out=24fps *.jpg"              << std::endl;
 
   std::cout << std::endl;
   std::cout << std::endl;
-
 }
 
 //---------------------------------------------------------------
@@ -153,6 +155,10 @@ static void s_validate_args(const Args &args)
     std::cout << std::endl << "ERROR:  continuing-exposure needs a framecount > 1" << std::endl;
     exit(-1);
   }
+  if (args.withSelect && (args.selectInFrames < 1 || args.selectIgnFrames < 1)) {
+    std::cout << std::endl << "ERROR:  wrong select-format (x/y where x>0 and y>0)" << std::endl;
+    exit(-1);
+  }
 }
 
 //---------------------------------------------------------------
@@ -169,9 +175,11 @@ static void s_parse_args(Args &args)
         args.withResize = true;
         args.toSize     = QSize(parts[0].toInt(),parts[1].toInt());
       }
+    } else if (s_parse_arg(nextArg,"crop",argValue) && s_parse_geometry(argValue,args.fromRect)) {       // alias for "crop-from"
+      args.withCropFrom = true;
     } else if (s_parse_arg(nextArg,"crop-from",argValue) && s_parse_geometry(argValue,args.fromRect)) {  // --crop-from=1024x768+10+70
       args.withCropFrom = true;
-    } else if (s_parse_arg(nextArg,"crop-to",argValue) && s_parse_geometry(argValue,args.toRect)) {  // --crop-to=1024x768+10+70
+    } else if (s_parse_arg(nextArg,"crop-to",argValue) && s_parse_geometry(argValue,args.toRect)) {      // --crop-to=1024x768+10+70
       args.withCropTo = true;
     } else if (s_parse_arg(nextArg,"threads",argValue)) {
       args.threadCount = argValue.toInt();
@@ -183,6 +191,13 @@ static void s_parse_args(Args &args)
       args.tweening = argValue;
     }else if (s_parse_arg(nextArg,"rename",argValue)) {
       args.outfileTemplate = argValue;
+    }else if (s_parse_arg(nextArg,"select",argValue)) {
+      QList<QString> parts = argValue.split("/");
+      args.withSelect = true;
+      if (parts.count() == 2) {
+        args.selectInFrames  = parts[0].toInt();
+        args.selectIgnFrames = parts[1].toInt();
+      }
     }else if (s_parse_arg(nextArg,"add-alpha",argValue)) {
       QList<QString> parts = argValue.split(",");
       if (parts.count() == 2) {
@@ -198,10 +213,13 @@ static void s_parse_args(Args &args)
     } else if (s_parse_arg(nextArg,"cont-exposure-frames",argValue)) {
         args.withContExposure    = true;
         args.contExposureFrames  = argValue.toInt();
-    } else if (nextArg == "--create-toc") {
-      args.withToc = true;
+    } else if (s_parse_arg(nextArg,"toc",argValue)) {
+        args.withToc    = true;
+        args.tocName    = argValue;
+    } else if (nextArg == "--toc") {
+        args.withToc = true;
     } else if ((nextArg == "--help") || (nextArg == "-h") || (nextArg == "-?")) {
-      args.printHelp = true;
+        args.printHelp = true;
     } else {
       args.fileList << nextArg;
     }

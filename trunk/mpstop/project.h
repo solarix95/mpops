@@ -13,14 +13,16 @@ public:
     bool open(const QString &tocfile);
     void save();
     void saveAs(const QString &tocfile);
+    bool isDirty() const;
 
 signals:
     void clearAllFrames();
     void appendFrames(const QStringList &filenames);
     void appendFreeze();
     
-public slots:
+private:
     CinelerraToc  mTocFile;
+    bool          mIsDirty;
 };
 
 #endif // PROJECT_H

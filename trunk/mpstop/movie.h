@@ -19,12 +19,15 @@ public:
 
     explicit Movie(QObject *parent = 0);
     
-    int  frameCount() const;
-    int  fps() const;
-
+    int     frameCount() const;
+    int     fps() const;
+    QString name() const;
+    bool    isDirty() const;
 
     void     addFrames(const QStringList &fileList);
     void     clear();
+    void     save();
+    bool     open(const QString &projectName);
 
     FrameType type(int frame) const;
     QImage  *thumbNail(int frame) const;
@@ -45,6 +48,8 @@ signals:
     void frameChanged(int index);
     void isComplete(bool complete);
     void fpsChanged(int newFps);
+    void dirtyChanged();
+    void requestFileName(QString *name);
     
 public slots:
     // Thread-Anwsers:
@@ -53,20 +58,25 @@ public slots:
     void setMovieIsComplete();
 
     // GUI-Request:
-    void addFreezeFrame(int startIndex);
+
+    void addFreezeFrame(int startIndex = -1);
     void removeFrame(int startIndex);
     void setFps(int fps);
     void setVideoWidth(int w);
     void setVideoHeight(int h);
 
+    // TOC-Parser
+    void addFrame(const QString &filename);
+    void handleTocComment(const QString &comment);
+    void setVideoSize(QSize s);
+
 private:
     void lock() const;
     void unlock() const;
     void resetRendering();
+    void setDirty(bool d);
 
     typedef QSharedPointer<QImage> ImagePtr;
-
-
 
     struct Frame {
         qint64     ident;
@@ -81,6 +91,9 @@ private:
     qint64         mTopFrameIdent;
     int            mFps;
     QSize          mRenderSize;
+
+    QString        mProjectName;
+    bool           mIsDirty;
 };
 
 #endif // MOVIE_H

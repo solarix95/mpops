@@ -23,8 +23,9 @@ Controller::Controller(const Args &args, QObject *parent) :
     QObject(parent)
 {
     mArgs             = args;
-    mJobIndex         = 1;
-    mCurrentIndex     = 0;
+    mOutIndex         = 1;
+    mInIndex          = 0;
+    mOrigIndex        = 0;
     mMaxFramesInQueue = qMax(2,args.contExposureFrames);
 
     qDebug() << "ARGS" << args.fileList;
@@ -56,7 +57,7 @@ bool Controller::run()
         mToc.setSize(mArgs.toSize);
 
     if (!mArgs.outDir.isEmpty())
-        mToc.setFilename(mArgs.outDir + QDir::separator() + mToc.filename());
+        mToc.setFilename(mArgs.outDir + QDir::separator() + (mArgs.tocName.isEmpty() ? mToc.filename():mArgs.tocName));
 
     return true;
 }
@@ -68,17 +69,17 @@ void Controller::queueChanged(OpQueue *queue)
     bool  atEnd = false;
 
     if (queue->jobCount() == 0) {
-        img = mImageArray.nextFrame();
+        img = selectFrame();
         if (img.isNull())
             atEnd = true;
         else {
-            if (mCurrentIndex == 0) {
+            if (mInIndex == 0) {
                 img->load();
                 pickGeometry(img);
             }
-            bool     withTweens = !mArgs.tweening.isEmpty() && (mCurrentIndex > 0);
+            bool     withTweens = !mArgs.tweening.isEmpty() && (mInIndex > 0);
 
-            std::cout << "starting " << (mCurrentIndex+1) << "/" << mImageArray.frameCount() << std::endl;
+            std::cout << "starting " << (mInIndex+1) << "/" << mImageArray.frameCount() << std::endl;
 
             // Loading:
             queue->addJob(new OpenJob(img,mArgs.colorPickerPixel));
@@ -88,7 +89,7 @@ void Controller::queueChanged(OpQueue *queue)
                 QRect currentRect;
                 if (mArgs.withCropTo) {
 
-                    double imgFactor = (mCurrentIndex+1)/((double)mImageArray.frameCount()); // 0 .. 1
+                    double imgFactor = (mInIndex+1)/((double)mImageArray.frameCount()); // 0 .. 1
                     currentRect.setX(SCALE(mArgs.fromRect.x(), mArgs.toRect.x(),imgFactor));
                     currentRect.setY(SCALE(mArgs.fromRect.y(), mArgs.toRect.y(),imgFactor));
                     currentRect.setWidth(SCALE(mArgs.fromRect.width(), mArgs.toRect.width(),imgFactor));
@@ -107,7 +108,7 @@ void Controller::queueChanged(OpQueue *queue)
                 queue->addJob(new BlueboxJob(img,mArgs.alphaHue, mArgs.alphaHueTolerance));
 
             // Store-Operation:
-            QString toFileName = createFileName(img->frameName(), withTweens ? mJobIndex+1 : mJobIndex);
+            QString toFileName = createFileName(img->frameName(), withTweens ? mOutIndex+1 : mOutIndex);
 
             if (mArgs.withContExposure) {
                 queue->addJob(new CloseJob(img)); // saveing is done by ExposureJob
@@ -122,7 +123,7 @@ void Controller::queueChanged(OpQueue *queue)
                 Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
                 ImagePtr out(new Image(new QImage(),"")); // TODO: tweenFileName direkt übergeben?
                 queue->addJob(new TweeningAvg(mLastImages.last(),img,out));
-                QString tweenFileName = createFileName(img->frameName(),mJobIndex);
+                QString tweenFileName = createFileName(img->frameName(),mOutIndex);
                 queue->addJob(new SaveAndCloseJob(out,tweenFileName));
                 mToc.appendImage(dir.absoluteFilePath(tweenFileName));
                 mJobIndex++;
@@ -138,7 +139,7 @@ void Controller::queueChanged(OpQueue *queue)
         }
     }
 
-    if ((mCurrentIndex == mImageArray.frameCount()) || atEnd) {
+    if ((mInIndex == mImageArray.frameCount()) || atEnd) {
         int jobCount = 0;
         foreach(OpQueue *nextQueue, mThreads) {
             if (nextQueue->jobCount() == 0) {
@@ -154,10 +155,30 @@ void Controller::queueChanged(OpQueue *queue)
     }
 
     if (mThreads.isEmpty()) {
-        if (mArgs.withToc && mToc.save())
-            std::cout << "cinelerra-toc created" << std::endl;
+        if (mArgs.withToc) {
+            if (mToc.save())
+                std::cout << "cinelerra-toc " << mToc.filename().toAscii().data() << " created" << std::endl;
+            else
+                std::cerr << "cannot write cinelerra-toc " <<  mToc.filename().toAscii().data() << std::endl;
+        }
         emit finished();
     }
+}
+
+//---------------------------------------------------------------
+ImagePtr Controller::selectFrame()
+/*
+  Skip frames if needed (--select=x/y argument..)
+*/
+{
+    ImagePtr ret;
+    int groupIndex;
+    do {
+        ret = mImageArray.nextFrame();
+        groupIndex = mOrigIndex % (mArgs.selectIgnFrames+mArgs.selectInFrames);
+        mOrigIndex++;
+    } while (!ret.isNull() && (mArgs.withSelect && groupIndex >= mArgs.selectInFrames));
+    return ret;
 }
 
 //---------------------------------------------------------------
@@ -175,6 +196,7 @@ bool Controller::pickGeometry(ImagePtr firstFrame)
     }
     if (mArgs.withCropTo && mArgs.toRect.width() <= 0) {
         GeometryPicker picker(firstFrame->img(),"pick 'to-crop'");
+        picker.setReferenceSelection(mArgs.fromRect);
         if (!picker.exec())
             return false;
         mArgs.toRect = picker.selection();

@@ -9,5 +9,6 @@
         <file>images/play_stop.png</file>
         <file>darkorange.qss</file>
         <file>images/splash.png</file>
+        <file>images/icon.png</file>
     </qresource>
 </RCC>

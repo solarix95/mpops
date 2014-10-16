@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QImage>
 #include "ui_geometrypicker.h"
-#include "imageview.h"
+#include "imagerectview.h"
 
 class GeometryPicker : public QDialog
 {
@@ -12,6 +12,7 @@ class GeometryPicker : public QDialog
 public:
     explicit GeometryPicker(QImage *img,const QString &title, QWidget *parent = 0);
     
+    void setReferenceSelection(const QRect &rect);
     QRect selection() const;
 
 signals:
@@ -26,7 +27,7 @@ private:
 
     Ui::DiaGeometryPicker   ui;
     QImage               *mImg;
-    ImageView             mImageView;
+    ImageRectView             mImageView;
     QRect                 mLastSelection;
 
 };
