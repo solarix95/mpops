@@ -10,6 +10,7 @@ Cinema::Cinema(QWidget *parent) :
     mCurrentFrame  = 0;
     mPlayDirection = 0;
     mLoop          = false;
+    mFirstStart    = true;
     connect(&mPlayTimer,SIGNAL(timeout()), this, SLOT(showNextFrame()));
     mPlayTimer.start(1000/12);
 }
@@ -64,12 +65,19 @@ void Cinema::paintEvent(QPaintEvent *)
     p.setBrush(Qt::black);
     p.drawRect(rect());
 
-    if (!mMovie || (mCurrentFrame < 0) || (mCurrentFrame >= mMovie->frameCount()))
+
+    if (!mMovie || (mCurrentFrame < 0) || (mCurrentFrame >= mMovie->frameCount())) {
+        if (mFirstStart) {
+            p.setPen(Qt::gray);
+            p.drawText(rect(),Qt::AlignCenter,"Welcome back, director.");
+        }
         return;
+    }
 
     if (!mMovie->rendered(mCurrentFrame) || mMovie->rendered(mCurrentFrame)->isNull())
         return;
 
+    mFirstStart = false;
     QImage img = mMovie->rendered(mCurrentFrame)->scaled(width()-10,height()-70,Qt::KeepAspectRatio);
     p.drawImage((width()-img.width())/2,(height()-img.height())/2,img);
 

@@ -149,11 +149,16 @@ void MainWindow::updateRenderButton(bool isEnabled)
 }
 
 // -----------------------------------------------------------
+void MainWindow::updateRenderSize(QSize toSize)
+{
+    ui->edtVideoHeight->setValue(toSize.height());
+    ui->edtVideoWidth->setValue(toSize.width());
+}
+
+// -----------------------------------------------------------
 void MainWindow::restoreWindowState()
 {
-    // resize(mSettings.lastMainSize());
-    // move(mSettings.lastMainPos());
-    qDebug() << pos() << mSettings.lastMainPos();
+
     setGeometry(mSettings.lastGeometry()); // WTF.. not working..?!?
     ui->edtVideoHeight->setValue(mSettings.defaultVideoHeight());
     ui->edtVideoWidth->setValue(mSettings.defaultVideoWidth());
@@ -173,6 +178,14 @@ void MainWindow::saveProject()
 // -----------------------------------------------------------
 void MainWindow::saveAsProject()
 {
+    QString tocFile = QFileDialog::getSaveFileName(this,tr("New Cinerella/Blacksuit-TOC"),"","*.toc");
+    if (tocFile.isEmpty())
+        return;
+    if (!tocFile.endsWith(".toc"))
+        tocFile += ".toc";
+
+    Q_ASSERT(mMovie);
+    mMovie->saveAs(tocFile);
 }
 
 // -----------------------------------------------------------
