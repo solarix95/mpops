@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTimer>
+#include <QTime>
 
 class Movie;
 class Cinema : public QWidget
@@ -27,11 +28,14 @@ public slots:
 
 protected:
     virtual void paintEvent(QPaintEvent *);
+    virtual void dropEvent(QDropEvent *);
+    virtual void dragEnterEvent(QDragEnterEvent *);
 
 private slots:
     void frameChanged(int frameIndex);
     void showNextFrame();
     void fpsChanged(int newFps);
+    void initAnimation();
 
 private:
     Movie  *mMovie;
@@ -40,7 +44,7 @@ private:
     int     mCurrentFrame;
     int     mPlayDirection;
     bool    mLoop;
-    bool    mFirstStart;
+    QTime   mStartTime;
     
 };
 

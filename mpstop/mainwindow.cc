@@ -3,6 +3,8 @@
 #include <QByteArray>
 #include <QMenu>
 #include <QAction>
+#include <QClipboard>
+#include <QMimeData>
 #include <QDebug>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -11,6 +13,7 @@
 #include "moviescene.h"
 #include "cinema.h"
 #include "tocrenderer.h"
+#include "utils.h"
 
 #define MY_TITLE   "Darksuit Stopmotion"
 
@@ -206,6 +209,34 @@ void MainWindow::openProject()
 }
 
 // -----------------------------------------------------------
+void MainWindow::insertFromClipboard()
+{
+    QClipboard *clipboard = QApplication::clipboard();
+    Q_ASSERT(clipboard);
+    if (!clipboard->mimeData() || !mMovie)
+        return;
+
+    QList<QByteArray> fileUrls = Darksuit::filesFromMimeData(clipboard->mimeData());
+    foreach(QByteArray nextFile, fileUrls) {
+        mMovie->addFrame(nextFile);
+    }
+}
+
+// -----------------------------------------------------------
+void MainWindow::revertInsertFromClipboard()
+{
+    QClipboard *clipboard = QApplication::clipboard();
+    Q_ASSERT(clipboard);
+    if (!clipboard->mimeData() || !mMovie)
+        return;
+
+    QList<QByteArray> fileUrls = Darksuit::filesFromMimeData(clipboard->mimeData());
+    for (int i = fileUrls.count() - 1; i >= 0; i--) {
+        mMovie->addFrame(fileUrls[i]);
+    }
+}
+
+// -----------------------------------------------------------
 void MainWindow::beginRender()
 {
     Q_ASSERT(!mRenderSplash);
@@ -243,10 +274,12 @@ void MainWindow::dirtyChanged()
 // -----------------------------------------------------------
 void MainWindow::setupMenu()
 {
-   connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(newProject()));
-   connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openProject()));
-   connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveProject()));
-   connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAsProject()));
+    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(newProject()));
+    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openProject()));
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveProject()));
+    connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAsProject()));
+
+    connect(ui->actionInsertRevert, SIGNAL(triggered()), this, SLOT(revertInsertFromClipboard()));
 }
 
 // -----------------------------------------------------------

@@ -36,11 +36,15 @@ private slots:
     void updateRenderSize(QSize toSize);
     void restoreWindowState();
 
-    // Menu-Actions:
+    // File-Menu-Actions:
     void saveProject();
     void saveAsProject();
     void newProject();
     void openProject();
+
+    // Edit-Menu-Actions:
+    void insertFromClipboard();
+    void revertInsertFromClipboard();
 
     // Render-State:
     void beginRender();
