@@ -138,7 +138,7 @@
      <x>0</x>
      <y>0</y>
      <width>873</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -150,7 +150,21 @@
     <addaction name="actionSave"/>
     <addaction name="actionSaveAs"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <widget class="QMenu" name="menuClipboard">
+     <property name="title">
+      <string>Clipboard</string>
+     </property>
+     <addaction name="actionInsert_files_from"/>
+     <addaction name="actionInsertRevert"/>
+    </widget>
+    <addaction name="menuClipboard"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -335,6 +349,16 @@
   <action name="actionOpen">
    <property name="text">
     <string>Open</string>
+   </property>
+  </action>
+  <action name="actionInsert_files_from">
+   <property name="text">
+    <string>Insert  files from</string>
+   </property>
+  </action>
+  <action name="actionInsertRevert">
+   <property name="text">
+    <string>Insert files reverted</string>
    </property>
   </action>
  </widget>

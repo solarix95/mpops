@@ -1,7 +1,13 @@
 #include <QPainter>
+#include <QDebug>
 #include <QTime>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include "cinema.h"
 #include "movie.h"
+#include "utils.h"
+
+#define INIT_ANIM_TIME 5000
 
 // -----------------------------------------------------------
 Cinema::Cinema(QWidget *parent) :
@@ -10,9 +16,14 @@ Cinema::Cinema(QWidget *parent) :
     mCurrentFrame  = 0;
     mPlayDirection = 0;
     mLoop          = false;
-    mFirstStart    = true;
+    mStartTime.start();
     connect(&mPlayTimer,SIGNAL(timeout()), this, SLOT(showNextFrame()));
     mPlayTimer.start(1000/12);
+    setAcceptDrops(true);
+
+    QTimer *t = new QTimer();
+    connect(t, SIGNAL(timeout()), this, SLOT(initAnimation()));
+    t->start(25);
 }
 
 // -----------------------------------------------------------
@@ -67,8 +78,9 @@ void Cinema::paintEvent(QPaintEvent *)
 
 
     if (!mMovie || (mCurrentFrame < 0) || (mCurrentFrame >= mMovie->frameCount())) {
-        if (mFirstStart) {
-            p.setPen(Qt::gray);
+        if (mStartTime.elapsed() < INIT_ANIM_TIME) {
+            int d = mStartTime.elapsed()/(float)INIT_ANIM_TIME * 255.0;
+            p.setPen(QColor(255-d,255-d,255-d));
             p.drawText(rect(),Qt::AlignCenter,"Welcome back, director.");
         }
         return;
@@ -77,7 +89,6 @@ void Cinema::paintEvent(QPaintEvent *)
     if (!mMovie->rendered(mCurrentFrame) || mMovie->rendered(mCurrentFrame)->isNull())
         return;
 
-    mFirstStart = false;
     QImage img = mMovie->rendered(mCurrentFrame)->scaled(width()-10,height()-70,Qt::KeepAspectRatio);
     p.drawImage((width()-img.width())/2,(height()-img.height())/2,img);
 
@@ -91,6 +102,28 @@ void Cinema::paintEvent(QPaintEvent *)
                             .arg(QTime(h,m,s,ms).toString("hh:mm:ss.zzz"));
     p.setPen(Qt::white);
     p.drawText(QRect(0,10,width(),height()),Qt::AlignTop | Qt::AlignHCenter, infoText);
+}
+
+// -----------------------------------------------------------
+void Cinema::dropEvent(QDropEvent *e)
+{
+    if (!mMovie)
+        return;
+
+    QList<QByteArray> fileUrls = Darksuit::filesFromMimeData(e->mimeData());
+    foreach(QByteArray nextFile, fileUrls) {
+            mMovie->addFrame(nextFile);
+    }
+}
+
+// -----------------------------------------------------------
+void Cinema::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (!mMovie)
+        return;
+
+    if (e->mimeData()->hasFormat("text/uri-list"))
+             e->acceptProposedAction();
 }
 
 // -----------------------------------------------------------
@@ -133,4 +166,15 @@ void Cinema::showNextFrame()
 void Cinema::fpsChanged(int newFps)
 {
     mPlayTimer.start(1000/newFps);
+}
+
+// -----------------------------------------------------------
+void Cinema::initAnimation()
+{
+    Q_ASSERT(dynamic_cast<QTimer*>(sender()));
+    if (mStartTime.elapsed() > INIT_ANIM_TIME) {
+        dynamic_cast<QTimer*>(sender())->deleteLater();
+    }
+    update();
+
 }
