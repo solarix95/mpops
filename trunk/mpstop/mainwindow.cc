@@ -181,9 +181,11 @@ void MainWindow::saveProject()
 // -----------------------------------------------------------
 void MainWindow::saveAsProject()
 {
-    QString tocFile = QFileDialog::getSaveFileName(this,tr("New Cinerella/Blacksuit-TOC"),"","*.toc");
+    static QString lastDir;
+    QString tocFile = QFileDialog::getSaveFileName(this,tr("New Cinerella/Blacksuit-TOC"),lastDir,"*.toc");
     if (tocFile.isEmpty())
         return;
+    lastDir = tocFile;
     if (!tocFile.endsWith(".toc"))
         tocFile += ".toc";
 
