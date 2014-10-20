@@ -30,6 +30,7 @@ public:
     bool     saveAs(const QString &projectName);
     bool     open(const QString &projectName);
 
+    QString   source(int frame) const;
     FrameType type(int frame) const;
     QImage  *thumbNail(int frame) const;
     QImage  *rendered(int frame) const;

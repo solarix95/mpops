@@ -102,6 +102,8 @@ void Cinema::paintEvent(QPaintEvent *)
                             .arg(QTime(h,m,s,ms).toString("hh:mm:ss.zzz"));
     p.setPen(Qt::white);
     p.drawText(QRect(0,10,width(),height()),Qt::AlignTop | Qt::AlignHCenter, infoText);
+    p.drawText(QRect(0,10,width(),height()),Qt::AlignTop | Qt::AlignHCenter, infoText);
+    p.drawText(QRect(0,height()-30,width(),height()),Qt::AlignTop | Qt::AlignHCenter, mMovie->source(mCurrentFrame));
 }
 
 // -----------------------------------------------------------

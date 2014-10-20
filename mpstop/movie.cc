@@ -198,6 +198,14 @@ bool Movie::open(const QString &projectName)
 }
 
 // -----------------------------------------------------------
+QString Movie::source(int frame) const
+{
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
+    Q_ASSERT(frame >= 0 && frame < mFrames.count());
+    return mFrames.at(frame)->source;
+}
+
+// -----------------------------------------------------------
 Movie::FrameType Movie::type(int frame) const
 {
     Q_ASSERT(QThread::currentThread() == qApp->thread());
