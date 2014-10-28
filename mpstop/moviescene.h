@@ -15,6 +15,9 @@ class MovieScene : public QGraphicsScene
 public:
     explicit MovieScene(QObject *parent, Movie *movie, SelectionModel *selections);
 
+protected:
+    virtual void keyPressEvent(QKeyEvent *event);
+
 private slots:
     void createMovieThumbnail(int index);
     void removeMovieThumbnail(int index);

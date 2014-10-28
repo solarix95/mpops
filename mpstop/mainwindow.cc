@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnPause, SIGNAL(clicked()), ui->cinema, SLOT(pause()));
     connect(ui->btnRender, SIGNAL(clicked()), this, SLOT(render()));
     connect(ui->cinema, SIGNAL(currentFrame(int)), this, SLOT(updateFrameIndex(int)));
-    connect(ui->cinema, SIGNAL(currentFrame(int)), &mSelections, SLOT(select(int)));
+    // connect(ui->cinema, SIGNAL(currentFrame(int)), &mSelections, SLOT(select(int)));
     connect(ui->edtCurrentFrame,SIGNAL(valueChanged(int)), ui->cinema, SLOT(setFrame(int)));
 
     connect(&mSelections, SIGNAL(selected(int)), ui->cinema, SLOT(setFrame(int)));

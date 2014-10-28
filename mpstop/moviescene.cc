@@ -2,6 +2,7 @@
 #include <QTimer>
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
 #include "moviescene.h"
 #include "movie.h"
 
@@ -17,6 +18,19 @@ MovieScene::MovieScene(QObject *parent, Movie *movie, SelectionModel *selections
 }
 
 // -----------------------------------------------------------
+void MovieScene::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Delete) {
+        Q_ASSERT(mSelections);
+        QList<int> sels = mSelections->selections();
+        while (sels.count() > 0) {
+            mMovie->removeFrame(sels.takeLast());
+        }
+    }
+    QGraphicsScene::keyPressEvent(event);
+}
+
+// -----------------------------------------------------------
 void MovieScene::createMovieThumbnail(int index)
 {
     mThumbs     << ThumbnailPtr(new Thumbnail(mMovie,mThumbs.count(),mSelections));
@@ -26,8 +40,8 @@ void MovieScene::createMovieThumbnail(int index)
 }
 
 // -----------------------------------------------------------
-void MovieScene::removeMovieThumbnail(int index)
+void MovieScene::removeMovieThumbnail(int /*index*/)
 {
-    mThumbs.takeLast();
+    removeItem(mThumbs.takeLast().data());
 }
 

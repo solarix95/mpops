@@ -1,10 +1,12 @@
 #include <QDebug>
 #include "selectionmodel.h"
 
+// ----------------------------------------------------------------------------
 SelectionModel::SelectionModel()
 {
 }
 
+// ----------------------------------------------------------------------------
 void SelectionModel::select(int index, bool deselectOthers)
 {
     while (deselectOthers && mIndexes.count() > 0)
@@ -17,12 +19,28 @@ void SelectionModel::select(int index, bool deselectOthers)
     }
 }
 
+// ----------------------------------------------------------------------------
+void SelectionModel::arraySelect(int toIndex)
+{
+
+    if (mIndexes.count() > 0) {
+        int from = qMin(toIndex,mIndexes.last());
+        int to   = qMax(toIndex,mIndexes.last());
+        for (int i=from; i<=to; i++) {
+            select(i,false);
+        }
+    } else
+        select(toIndex,false);
+}
+
+// ----------------------------------------------------------------------------
 void SelectionModel::deselect(int index)
 {
     mIndexes.removeAll(index);
     emit changed(index);
 }
 
+// ----------------------------------------------------------------------------
 void SelectionModel::removed(int index)
 {
     mIndexes.removeAll(index);
@@ -36,6 +54,7 @@ void SelectionModel::removed(int index)
     }
 }
 
+// ----------------------------------------------------------------------------
 void SelectionModel::select(int index)
 {
     select(index,true);
