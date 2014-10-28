@@ -55,7 +55,10 @@ void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
 void Thumbnail::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_ASSERT(mSelections);
-    mSelections->select(mId, !(event->modifiers() & Qt::ControlModifier));
+    if (event->modifiers() & Qt::ShiftModifier)
+        mSelections->arraySelect(mId);
+    else
+        mSelections->select(mId, !(event->modifiers() & Qt::ControlModifier));
 }
 
 // -----------------------------------------------------------

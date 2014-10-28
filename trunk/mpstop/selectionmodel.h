@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QSet>
-
+#include <QList>
 
 class SelectionModel : public QObject
 {
@@ -13,6 +13,7 @@ public:
     SelectionModel();
 
     inline bool isSelected(int index) const { return mIndexes.contains(index); }
+    inline QList<int> selections() const { QList<int> ret = mIndexes; qSort(ret); return ret; }
 
 signals:
     void changed(int index);
@@ -22,6 +23,7 @@ signals:
 public slots:
     void select(int index);
     void select(int index, bool deselectOthers);
+    void arraySelect(int toIndex);
     void deselect(int index);
     void removed(int index);
 
