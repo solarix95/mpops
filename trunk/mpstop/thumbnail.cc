@@ -33,7 +33,7 @@ QRectF Thumbnail::boundingRect() const
 }
 
 // -----------------------------------------------------------
-void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void Thumbnail::paint(QPainter *painter, const QStyleOptionGraphicsItem * /* option */, QWidget * /* widget */)
 {
     Q_ASSERT(painter);
     painter->save();

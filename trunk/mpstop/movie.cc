@@ -138,6 +138,7 @@ void Movie::clear()
     unlock();
     mProjectName = "";
     setDirty(false);
+    emit reloaded();
 }
 
 // ----------------------------------------------------------------------------
@@ -192,8 +193,10 @@ bool Movie::open(const QString &projectName)
         mRenderSize = toc.size();
         emit sizeChanged(mRenderSize);
         setDirty(false);
+        emit reloaded();
         return true;
-    }
+    } else
+        clear();
     return false;
 }
 
@@ -241,7 +244,7 @@ QImage *Movie::rendered(int frame) const
 }
 
 // -----------------------------------------------------------
-bool Movie::frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source)
+bool Movie::frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source, QDateTime &renderTime)
 {
     lock();
 
@@ -252,6 +255,7 @@ bool Movie::frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isR
         hasThumb    = !mFrames[index]->thumbnail->isNull();
         isRendered  = !mFrames[index]->rendered->isNull();
         source      = mFrames[index]->source;
+        renderTime  = mFrames[index]->renderTime;
     }
     unlock();
 
@@ -277,6 +281,36 @@ bool Movie::relativeImage(int fromIndex, qint64 fromId, int relIndex, qint64 &re
     unlock();
     return ret;
 }
+
+// -----------------------------------------------------------
+bool Movie::scheduleImage(int index, qint64 id)
+{
+    lock();
+
+    bool ret = index >= 0 && (index < mFrames.count()) && mFrames[index]->ident == id;
+    QList<int> changedIndexes;
+    if (ret) {
+        // Reset requested frame...
+        mFrames[index]->thumbnail = ImagePtr(new QImage());
+        mFrames[index]->rendered  = ImagePtr(new QImage());
+        mFrames[index]->renderTime = QDateTime();
+        changedIndexes << index;
+        // .. and the follow ups.. if they're "effects"
+        while ( (++index) < mFrames.count() && mFrames[index]->type != FileSource) {
+            mFrames[index]->thumbnail = ImagePtr(new QImage());
+            mFrames[index]->rendered  = ImagePtr(new QImage());
+            mFrames[index]->renderTime = QDateTime();
+            changedIndexes << index;
+        }
+    }
+
+    unlock();
+
+    while (changedIndexes.count() > 0)
+        emit frameChanged(changedIndexes.takeFirst());
+    return ret;
+}
+
 
 // -----------------------------------------------------------
 void Movie::setMovieIsComplete()
@@ -358,6 +392,7 @@ void Movie::jobRender(int index, qint64 id, QImage result)
     bool changed = false;
     if (index < mFrames.count() && mFrames[index]->ident == id) {
         *(mFrames[index]->rendered) = result;
+        mFrames[index]->renderTime = QDateTime::currentDateTime();
         changed = true;
     }
     unlock();

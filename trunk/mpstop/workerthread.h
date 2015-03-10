@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QImage>
+#include <QDateTime>
 
 class Movie;
 
@@ -30,6 +31,7 @@ private slots:
 private:
     void createThumb(int frameIndex, qint64 frameId, qint32 type, const QString &source);
     bool render(int frameIndex, qint64 frameId, qint32 type, const QString &source);
+    bool testSourceAge(const QString &sourceName, const QDateTime &timestamp) const;
 
     Movie *mMovie;
 

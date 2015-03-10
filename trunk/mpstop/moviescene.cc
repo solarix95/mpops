@@ -31,7 +31,7 @@ void MovieScene::keyPressEvent(QKeyEvent *event)
 }
 
 // -----------------------------------------------------------
-void MovieScene::createMovieThumbnail(int index)
+void MovieScene::createMovieThumbnail(int /* index */)
 {
     mThumbs     << ThumbnailPtr(new Thumbnail(mMovie,mThumbs.count(),mSelections));
     addItem(mThumbs.last().data());

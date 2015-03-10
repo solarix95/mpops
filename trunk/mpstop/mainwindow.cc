@@ -203,7 +203,9 @@ void MainWindow::newProject()
 // -----------------------------------------------------------
 void MainWindow::openProject()
 {
-    QString tocFile = QFileDialog::getOpenFileName(this,tr("Select Cinerella/Blacksuit-TOC"),"","*.toc");
+
+    static QString tocFile;
+    tocFile = QFileDialog::getOpenFileName(this,tr("Select Cinerella/Blacksuit-TOC"),tocFile,"*.toc");
     if (tocFile.isEmpty())
         return;
     Q_ASSERT(mMovie);

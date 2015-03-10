@@ -32,6 +32,7 @@ void Cinema::setMovie(Movie *movie)
     mMovie = movie;
     connect(mMovie, SIGNAL(frameChanged(int)), this, SLOT(frameChanged(int)));
     connect(mMovie, SIGNAL(fpsChanged(int)), this, SLOT(fpsChanged(int)));
+    connect(mMovie, SIGNAL(reloaded()), this, SLOT(resetPlayer()));
 }
 
 // -----------------------------------------------------------
@@ -179,4 +180,11 @@ void Cinema::initAnimation()
     }
     update();
 
+}
+
+// -----------------------------------------------------------
+void Cinema::resetPlayer()
+{
+    setFrame(0);
+    update();
 }
