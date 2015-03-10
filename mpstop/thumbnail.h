@@ -21,7 +21,7 @@ public:
     inline int id() const { return mId; }
 
     virtual QRectF boundingRect() const;
-    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *);
 
 
 

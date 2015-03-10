@@ -1,8 +1,11 @@
 #include <QTimer>
 #include <QDebug>
+#include <QFileInfo>
+
 #include "workerthread.h"
 #include "movie.h"
 
+//-----------------------------------------------------------------------------
 WorkerThread::WorkerThread(QObject *parent) :
     QThread(parent)
 {
@@ -10,12 +13,14 @@ WorkerThread::WorkerThread(QObject *parent) :
     moveToThread(this);
 }
 
+//-----------------------------------------------------------------------------
 void WorkerThread::start(Movie *movie)
 {
     mMovie = movie;
     QThread::start();
 }
 
+//-----------------------------------------------------------------------------
 void WorkerThread::run()
 {
     Q_ASSERT(mMovie);
@@ -25,17 +30,19 @@ void WorkerThread::run()
     exec();
 }
 
+//-----------------------------------------------------------------------------
 void WorkerThread::workRun()
 {
     Q_ASSERT(QThread::currentThread() == this);
     bool isComplete = true;
     for (int i=0; i<mMovie->frameCount(); i++) {
-        qint64  id;
-        qint32  type;
-        bool    hasThumb;
-        bool    isRendered;
-        QString source;
-        if (!mMovie->frame(i,id,type,hasThumb,isRendered,source))
+        qint64    id;
+        qint32    type;
+        bool      hasThumb;
+        bool      isRendered;
+        QString   source;
+        QDateTime renderTime;
+        if (!mMovie->frame(i,id,type,hasThumb,isRendered,source, renderTime))
             break;
         if (!hasThumb) {
             createThumb(i,id,type,source);
@@ -45,12 +52,17 @@ void WorkerThread::workRun()
             isComplete = render(i,id,type,source) && isComplete;
             continue;
         }
+        if (testSourceAge(source, renderTime)) {
+            mMovie->scheduleImage(i,id);
+            continue;
+        }
     }
 
     if (isComplete)
         emit movieCompleteRendered();
 }
 
+//-----------------------------------------------------------------------------
 void WorkerThread::createThumb(int frameIndex,qint64 frameId,  qint32 type, const QString &source)
 {
     QImage img;
@@ -74,6 +86,7 @@ void WorkerThread::createThumb(int frameIndex,qint64 frameId,  qint32 type, cons
     }
 }
 
+//-----------------------------------------------------------------------------
 bool WorkerThread::render(int frameIndex, qint64 frameId, qint32 type, const QString &source)
 {
     QImage img;
@@ -97,4 +110,13 @@ bool WorkerThread::render(int frameIndex, qint64 frameId, qint32 type, const QSt
     }
 
     return !img.isNull();
+}
+
+//-----------------------------------------------------------------------------
+bool WorkerThread::testSourceAge(const QString &sourceName, const QDateTime &timestamp) const
+{
+    QFileInfo info(sourceName);
+    if (info.exists() && info.lastModified() > timestamp)
+        return true;
+    return false;
 }

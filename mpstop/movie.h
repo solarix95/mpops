@@ -6,6 +6,7 @@
 #include <QList>
 #include <QSharedPointer>
 #include <QMutex>
+#include <QDateTime>
 
 class Movie : public QObject
 {
@@ -36,9 +37,9 @@ public:
     QImage  *rendered(int frame) const;
 
     // Thread-Interface:
-    bool     frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source);
+    bool     frame(int index, qint64 &id, qint32 &type, bool &hasThumb, bool &isRendered, QString &source, QDateTime &renderTime);
     bool     relativeImage(int fromIndex, qint64 fromId, int relIndex, qint64 &relIdent, QImage &renderedImage);
-
+    bool     scheduleImage(int index, qint64 id);
 
     static QSize thumbSize();
     QSize renderSize();
@@ -52,7 +53,8 @@ signals:
     void fpsChanged(int newFps);
     void sizeChanged(QSize newSize);
     void dirtyChanged();
-    void requestFileName(QString *name);
+    void requestFileName(QString *name);   // save new project
+    void reloaded();                       // on "new", or "load"
     
 public slots:
     // Thread-Anwsers:
@@ -87,6 +89,7 @@ private:
         ImagePtr   rendered;
         QString    source;
         FrameType  type;
+        QDateTime  renderTime;
     };
 
     QList<Frame*>  mFrames;

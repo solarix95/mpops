@@ -36,6 +36,7 @@ private slots:
     void showNextFrame();
     void fpsChanged(int newFps);
     void initAnimation();
+    void resetPlayer();
 
 private:
     Movie  *mMovie;
