@@ -71,9 +71,21 @@ void CinelerraToc::setFps(int fps)
 }
 
 //---------------------------------------------------------------
+int CinelerraToc::fps() const
+{
+    return mFps;
+}
+
+//---------------------------------------------------------------
 void CinelerraToc::setSize(const QSize &size)
 {
     mSize = size;
+}
+
+//---------------------------------------------------------------
+QSize CinelerraToc::size() const
+{
+    return mSize;
 }
 
 //---------------------------------------------------------------

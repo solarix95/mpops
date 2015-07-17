@@ -13,7 +13,6 @@ class CinelerraToc : public QObject
 public:
     CinelerraToc();
 
-
     void setFilename(const QString &tocFileName);
     QString filename() const;
     void setTocType(const QString &tocType);
@@ -21,7 +20,9 @@ public:
 
     void appendImage(const QString &imageFileName);
     void setFps(int fps);
+    int  fps() const;
     void setSize(const QSize &size);
+    QSize size() const;
 
     bool save();
     bool load(const QString &filename);
