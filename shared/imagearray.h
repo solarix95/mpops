@@ -37,7 +37,6 @@ public:
     {
         Uninitialized,
         ImageList,      // frame1.png frame2.png frame...
-        CinelerraToc,   // frames.toc
         VideoFile       // video.mpg
     } Source;
 
@@ -47,21 +46,28 @@ public:
     void setVideoSource(const QString &videosource);
     bool appendSingleFrame(const QString &externalFileName); // only for source "ImageList"!
     bool appendSingleFrames(const QStringList &externalFileNames); // only for source "ImageList"!
+    void setMaxWidthHint(int maxWidth);
 
+    void     reset();
     bool     isValid() const;
     Source   source() const;
     ImagePtr nextFrame(bool *hasNext = NULL);
+    int      nextIndex() const;
+    bool     skipFrame();
     qint64   frameCount() const;
 
     static bool        validateExternalImage(const QString &fileName);
     static QStringList expandTemplateName(const QString &templateName);
 
 private:
+    bool        loadFromDirectory();
 
+    QString     mSourceName;
     Source      mSource;
     bool        mIsValid;
     int         mFrameIndex;
     QStringList mExternalFiles;
+    int         mMaxWidth;
 
 #ifdef WITH_OPENCV
     CvCapture* mCvCapture;

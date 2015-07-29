@@ -18,10 +18,13 @@
 static void s_print_help()
 {
   std::cout << std::endl;
-  std::cout << "mpops - motion picture operations - " << VERSION    << std::endl;
+  std::cout << "mpops - motion picture operations - " << VERSION     << std::endl;
+  std::cout << "Copyright (C) Roman Held, 2015"                      << std::endl;
+  std::cout << std::endl;
   std::cout << "usage: mpops [options] files..."                     << std::endl;
   std::cout << "  --crop-from=geometry"                              << std::endl;
   std::cout << "  --crop-to=geometry"                                << std::endl;
+  std::cout << "  --crop=geometry     : crop-from == crop-to"        << std::endl;
   std::cout << "  --resize=size       : widthxheight"                << std::endl;
   std::cout << "  --out=subdir"                                      << std::endl;
   std::cout << "  --select=take/skip"                                << std::endl;
@@ -31,6 +34,9 @@ static void s_print_help()
   std::cout << "  --rename=filename-template (sprintf)"              << std::endl;
   std::cout << "  --threads=count     : default: cpu-count"          << std::endl;
   std::cout << "  --toc(=name)        : creates cinelerra-toc"       << std::endl;
+  std::cout << "  --skip=framecount"                                 << std::endl;
+  std::cout << "  --frames=framecount"                               << std::endl;
+
   std::cout << std::endl;
   std::cout << "supported formats: "                                 << std::endl;
 
@@ -51,6 +57,9 @@ static void s_print_help()
   std::cout << "  mpops --crop-from=800x600+10+10 --crop-to=80x60 --resize=80x60 *.jpg" << std::endl;
   std::cout << "  mpops --select=1/2  --out=fast  *.jpg"              << std::endl;
   std::cout << "  mpops --select=24/1 --out=24fps *.jpg"              << std::endl;
+#ifdef WITH_OPENCV
+  std::cout << "  mpops --skip=500 --out=img GOPRO001.MP4"            << std::endl;
+#endif
 
   std::cout << std::endl;
   std::cout << std::endl;
@@ -213,6 +222,10 @@ static void s_parse_args(Args &args)
     } else if (s_parse_arg(nextArg,"cont-exposure-frames",argValue)) {
         args.withContExposure    = true;
         args.contExposureFrames  = argValue.toInt();
+    } else if (s_parse_arg(nextArg,"skip",argValue)) {
+        args.skipFrames  = argValue.toInt();
+    } else if (s_parse_arg(nextArg,"frames",argValue)) {
+        args.maxFrames  = argValue.toInt();
     } else if (s_parse_arg(nextArg,"toc",argValue)) {
         args.withToc    = true;
         args.tocName    = argValue;

@@ -26,9 +26,10 @@ Controller::Controller(const Args &args, QObject *parent) :
     mOutIndex         = 1;
     mInIndex          = 0;
     mOrigIndex        = 0;
+    mAtEnd            = false;
     mMaxFramesInQueue = qMax(2,args.contExposureFrames);
 
-    qDebug() << "ARGS" << args.fileList;
+    // qDebug() << "ARGS" << args.fileList;
     if (args.fileList.count() == 1) {
         mImageArray.setVideoSource(args.fileList.first());
     } else
@@ -38,7 +39,7 @@ Controller::Controller(const Args &args, QObject *parent) :
 //---------------------------------------------------------------
 bool Controller::run()
 {
-    qDebug() << mImageArray.isValid();
+    // qDebug() << mImageArray.isValid();
     if (!mImageArray.isValid())
         return false;
 
@@ -65,21 +66,24 @@ bool Controller::run()
 //---------------------------------------------------------------
 void Controller::queueChanged(OpQueue *queue)
 {
-    ImagePtr img;
-    bool  atEnd = false;
+    Q_ASSERT(QThread::currentThread() == qApp->thread());
 
-    if (queue->jobCount() == 0) {
+    if (!mThreads.contains(queue)) // ignore old Events
+        return;
+
+    ImagePtr img;
+    if (queue->jobCount() == 0 && !mAtEnd) {
         img = selectFrame();
-        if (img.isNull())
-            atEnd = true;
-        else {
+        if (img.isNull()) {
+            mAtEnd = true;
+        } else {
             if (mInIndex == 0) {
                 img->load();
                 pickGeometry(img);
             }
             bool     withTweens = !mArgs.tweening.isEmpty() && (mInIndex > 0);
 
-            std::cout << "starting " << (mInIndex+1) << "/" << mImageArray.frameCount() << std::endl;
+            std::cout << "starting " << (mInIndex+1) << "/" << (mArgs.maxFrames > 0 ? mArgs.maxFrames : mImageArray.frameCount()) << std::endl;
 
             // Loading:
             queue->addJob(new OpenJob(img,mArgs.colorPickerPixel));
@@ -100,8 +104,9 @@ void Controller::queueChanged(OpQueue *queue)
             }
 
             // Resize-Operation
+
             if (mArgs.withResize)
-                queue->addJob(new ResizeJob(img,mArgs.toSize));
+                queue->addJob(new ResizeJob(img,mArgs.toSize)); 
 
             // Bluebox-Operation (add-alpha)
             if (mArgs.withAlpha)
@@ -118,6 +123,7 @@ void Controller::queueChanged(OpQueue *queue)
                 queue->addJob(new SaveAndCloseJob(img,toFileName));
             }
 
+
             QDir dir;
             if (withTweens && (mArgs.tweening == "avg")) {
                 Q_ASSERT(!mArgs.outfileTemplate.isEmpty());
@@ -126,20 +132,30 @@ void Controller::queueChanged(OpQueue *queue)
                 QString tweenFileName = createFileName(img->frameName(),mOutIndex);
                 queue->addJob(new SaveAndCloseJob(out,tweenFileName));
                 mToc.appendImage(dir.absoluteFilePath(tweenFileName));
-                mJobIndex++;
+                mOutIndex++;
             }
 
             mToc.appendImage(dir.absoluteFilePath(toFileName));
 
-            mCurrentIndex++;
-            mJobIndex++;
+            mInIndex++;
+            mOutIndex++;
+
+
+            /* FIXME: why crash!??!?!?
             mLastImages << img;
+
+            Q_ASSERT(mMaxFramesInQueue >= 0);
             while (mLastImages.count() > mMaxFramesInQueue)
                 mLastImages.takeFirst();
+
+            */
+            if (mArgs.maxFrames > 0 && mOutIndex >= mArgs.maxFrames)
+                mAtEnd = true;
+
         }
     }
 
-    if ((mInIndex == mImageArray.frameCount()) || atEnd) {
+    if ((mInIndex == mImageArray.frameCount()) || mAtEnd) {
         int jobCount = 0;
         foreach(OpQueue *nextQueue, mThreads) {
             if (nextQueue->jobCount() == 0) {
@@ -163,28 +179,43 @@ void Controller::queueChanged(OpQueue *queue)
         }
         emit finished();
     }
+
 }
 
 //---------------------------------------------------------------
 ImagePtr Controller::selectFrame()
 /*
-  Skip frames if needed (--select=x/y argument..)
+  Skip frames if needed (--select=x/y and/or --skip=frms argument..)
 */
 {
+    // Skip frames..
+    while (mArgs.skipFrames > mOrigIndex) {
+        std::cout << "skip frame " << mOrigIndex << std::endl;
+        mImageArray.skipFrame();
+        mOrigIndex++;
+    }
+
     ImagePtr ret;
     int groupIndex;
+    bool skip;
     do {
-        ret = mImageArray.nextFrame();
         groupIndex = mOrigIndex % (mArgs.selectIgnFrames+mArgs.selectInFrames);
+        skip       = mArgs.withSelect && groupIndex >= mArgs.selectInFrames;
+        if (skip)
+            mImageArray.skipFrame();
+        else
+            ret = mImageArray.nextFrame();
+
         mOrigIndex++;
-    } while (!ret.isNull() && (mArgs.withSelect && groupIndex >= mArgs.selectInFrames));
+    } while (skip);
+
     return ret;
 }
 
 //---------------------------------------------------------------
 bool Controller::pickGeometry(ImagePtr firstFrame)
 {
-    qDebug() << "PICK" << firstFrame.isNull() << mArgs.withCropFrom << mArgs.withCropTo;
+    // qDebug() << "PICK" << firstFrame.isNull() << mArgs.withCropFrom << mArgs.withCropTo;
     if (firstFrame.isNull())
         return true;
 
@@ -211,6 +242,7 @@ QString Controller::createFileName(const QString originalFileName, int frameInde
     while (originalFileNameWithoutPath.indexOf(QDir::separator()) >= 0)
         originalFileNameWithoutPath.remove(0,originalFileNameWithoutPath.indexOf(QDir::separator()) + 1);
     
+
     QString toFileName = mArgs.outfileTemplate.isEmpty() ? originalFileNameWithoutPath : QString().sprintf(mArgs.outfileTemplate.toAscii().data(),frameIndex);
     if (!mArgs.outDir.isEmpty())
         toFileName = mArgs.outDir + QDir::separator() + toFileName;
@@ -222,5 +254,6 @@ QString Controller::createFileName(const QString originalFileName, int frameInde
             toFileName += "." +mArgs.format;
     }
 
+    // qDebug() << "CREATE FILENAME" << originalFileName << frameIndex << mArgs.outfileTemplate << toFileName;
     return toFileName;
 }

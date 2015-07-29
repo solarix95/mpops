@@ -48,11 +48,18 @@ typedef struct sArgs
   int             selectInFrames;
   int             selectIgnFrames;
 
+  // skip
+  int             skipFrames;
+
+  // frames
+  int             maxFrames;
+
   sArgs() : withResize(false), withCropFrom(false), withCropTo(false),
             threadCount(QThread::idealThreadCount()),
             printHelp(false), withToc(false), withAlpha(false),
             withContExposure(false),contExposureFrames(-1),
-            withSelect(false),selectInFrames(-1), selectIgnFrames(-1) {}
+            withSelect(false),selectInFrames(-1), selectIgnFrames(-1),
+            skipFrames(-1), maxFrames(-1) {}
 } Args;
 
 //---------------------------------------------------------------
@@ -78,14 +85,16 @@ private:
     QString  createFileName(const QString originalFileName, int frameIndex);
 
     Args            mArgs;
+    ImageArray      mImageArray;
     int             mOrigIndex;  // original index, before "select"
     int             mInIndex;    // input index, after "select"
     int             mOutIndex;   // output index (tweening...)
     QList<OpQueue*> mThreads;
     CinelerraToc    mToc;
-    ImageArray      mImageArray;
     ImagePtrs       mLastImages;
     int             mMaxFramesInQueue;
+
+    bool            mAtEnd;
 };
 
 #endif // CONTROLLER_H

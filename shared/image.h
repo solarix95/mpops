@@ -21,6 +21,7 @@ public:
     inline   void    setAllJobsDone()    { mAllJobsDone = true; }
     inline   bool    allJobsDone() const { return mAllJobsDone; }
     inline  QString  frameName() const   { return mFrameName;   }
+
 protected:
     virtual void loadImage(QImage *img);
 
