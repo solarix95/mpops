@@ -65,6 +65,12 @@ void CinelerraToc::appendImage(const QString &imageFileName)
 }
 
 //---------------------------------------------------------------
+QList<QString> CinelerraToc::images() const
+{
+    return mImages;
+}
+
+//---------------------------------------------------------------
 void CinelerraToc::setFps(int fps)
 {
     mFps = fps;

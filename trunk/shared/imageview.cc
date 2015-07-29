@@ -157,7 +157,7 @@ void  ImageView::setSelectedRect(const QRect &newRect)
 }
 
 //---------------------------------------------------------------
-QRect ImageView::selectedRect(bool *hasSelection) const
+QRect ImageView::selectedRect(bool */*hasSelection*/) const
 {
     return mImgSel;
 }

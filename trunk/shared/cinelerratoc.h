@@ -19,6 +19,7 @@ public:
     QString tocType() const;
 
     void appendImage(const QString &imageFileName);
+    QList<QString> images() const;
     void setFps(int fps);
     int  fps() const;
     void setSize(const QSize &size);
