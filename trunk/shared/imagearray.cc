@@ -12,6 +12,10 @@
 #include "shared/fileimage.h"
 #include "shared/cinelerratoc.h"
 
+#ifdef WITH_OPENCV
+#include "shared/opencvimage.h"
+#endif
+
 //---------------------------------------------------------------
 ImageArray::ImageArray(const QString &videosource)
 {
@@ -22,7 +26,6 @@ ImageArray::ImageArray(const QString &videosource)
 
 #ifdef WITH_OPENCV
     mCvCapture         = NULL;
-    mCvFrame           = NULL;
     mCvFrameCount      = 0;
 #endif
     setVideoSource(videosource);
@@ -152,51 +155,22 @@ ImagePtr ImageArray::nextFrame(bool *hasNext)
 #ifdef WITH_OPENCV
         Q_ASSERT(mCvCapture);
 
-        mCvFrame = cvQueryFrame( mCvCapture );
+        IplImage *nextFrame = cvQueryFrame( mCvCapture );
 
-        if(mCvFrame) {
-            if (mCvFrame->nChannels != 3) {
+        if(nextFrame) {
+
+            // TODO: OpencvImage::supports(nextFrame)..?
+            if (nextFrame->nChannels != 3) {
                 qWarning() << "CHANNELS";
                 return img;
             }
-            if (mCvFrame->depth != IPL_DEPTH_8U) {
-                qWarning() << "depth" << mCvFrame->depth;
+            if (nextFrame->depth != IPL_DEPTH_8U) {
+                qWarning() << "depth" << nextFrame->depth;
                 return img;
             }
 
-            int nc   = mCvFrame->nChannels;
-            int wstep= mCvFrame->widthStep;
-
-            unsigned char *data= reinterpret_cast<unsigned char *>
-                    (mCvFrame->imageData);
-
-
-            // Step: don't return Images in a higher resolution than requested..
-            int step = mCvFrame->width / mMaxWidth;
-            if (step <= 0)
-                step = 1;
-            else
-                step -= step % 2;
-
-            if (!step || (mCvFrame->width % step) || (mCvFrame->height % step))
-                step = 1;
-
-            img = ImagePtr(new FileImage(new QImage(mCvFrame->width/step,mCvFrame->height/step,QImage::Format_RGB32),QString("Frame_%1").arg(mFrameIndex)));
-            for (int y=0; y<mCvFrame->height; y += step) {
-                Q_ASSERT(y < mCvFrame->height);
-                QRgb *rawRow = (QRgb*)img->img()->scanLine(y/step);
-                for (int x=0; x<mCvFrame->width; x += step) {
-                    Q_ASSERT(x < mCvFrame->width);
-                    int firstIndex = y*wstep + x*nc;
-                    // BGR, not RGB:
-                    uchar blue  = data[firstIndex + 0];
-                    uchar green = data[firstIndex + 1];
-                    uchar red   = data[firstIndex + 2];
-                    // Slow:
-                    // img->img()->setPixel(x,y,qRgb(red,green,blue));
-                    rawRow[x/step] = qRgb(red,green,blue);
-                }
-            }
+            IplImage *copy = cvCloneImage(nextFrame); // nextFrame: internal (static)
+            img = ImagePtr(new OpencvImage(new QImage(),copy,QString("Frame_%1").arg(mFrameIndex),mMaxWidth));
             mFrameIndex++;
         }
 #endif
