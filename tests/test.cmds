@@ -16,3 +16,4 @@
 ../mpops/mpops --out=out16_select --select=2/1 --rename=frame_%d.jpg  in/*.jpg
 ../mpops/mpops --out=out17_toc    --toc        --rename=frame_%d.png --resize=1920x1080 in/*.jpg
 ../mpops/mpops --out=out18_toc    --toc=out18  --rename=frame_%d.png --resize=1920x1080 in/*.jpg
+../mpops/mpops --out=out19_skip   --rename=frame_%d.png --skip=2 --frames=1 in/test.mpg

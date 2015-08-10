@@ -71,7 +71,6 @@ private:
 
 #ifdef WITH_OPENCV
     CvCapture* mCvCapture;
-    IplImage*  mCvFrame;
     int        mCvFrameCount;
 #endif
 };

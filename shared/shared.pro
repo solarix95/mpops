@@ -3,6 +3,8 @@ INCLUDEPATH += . ..
 with_opencv {     # Needs Ubuntu-Pakage "libopencv-dev"
   DEFINES += WITH_OPENCV
   LIBS += -lopencv_core -lopencv_highgui
+  HEADERS += ../shared/opencvimage.h
+  SOURCES += ../shared/opencvimage.cc
 }
 
 # Input
