@@ -1,0 +1,1 @@
+A multithreaded CLI-Image-Converter based on QT. It makes the postprocessing of large timelapse-footages for Cinelerra-Videos easier and faster.
