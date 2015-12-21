@@ -1,5 +1,8 @@
 #include "math.h"
 #include "render/c4scene.h"
+#include "render/c4dummydevice.h"
+#include "render/c4png2ddevice.h"
+#include "render/c4pnganaglyphdevice.h"
 #include "painting/simpleframebuffer.h"
 #include "shape/c4mediashape.h"
 #include "media/c4imagemedia.h"
@@ -12,6 +15,9 @@ C4Scene::C4Scene()
 {
     mPrimaryBuffer  = new C4SimpleFrameBuffer(QSize(800,600));
     mSecondBuffer   = new C4SimpleFrameBuffer(QSize(800,600));
+    mOutDevice      = NULL;
+    // setOutDevice(new C4DummyDevice());
+    setOutDevice(new C4PngAnaglyphDevice());
 
     mShapes << new C4MediaShape(new C4VideoMedia("black-background_600.jpg"));
     mShapes << new C4MediaShape(new C4VideoMedia("playmate_640.jpg"));
@@ -45,58 +51,23 @@ void C4Scene::init(QSize size)
 }
 
 //-----------------------------------------------------------------------------
-void C4Scene::render()
+void C4Scene::render(int fromFrame, int toFrame)
 {
     // emit renderingStarted();
-    for (int i=mStartFrame; i<=mEndFrame; i++)
+    mOutDevice->init();
+    for (int i=fromFrame; i<=toFrame; i++)
         singleShot(NULL,i);
+    mOutDevice->save();
     // emit renderingEnded();
 }
 
 //-----------------------------------------------------------------------------
 void C4Scene::singleShot(QImage *img, int frameIndex)
 {
-    emit renderingStarted();
-    emit preRender(frameIndex);
-    mPrimaryBuffer->reset();
-    mSecondBuffer->reset();
-
-    // http://www.3dtv.at/knowhow/anaglyphcomparison_en.aspx
-    // http://www.animesh.me/2011/05/rendering-3d-anaglyph-in-opengl.html
-    // http://paulbourke.net/stereographics/stereorender/
-
-    // parallel axis asymmetric frustum perspective projection
-
-    applyLeftFrustum(mPrimaryBuffer);
-    applyRightFrustum(mSecondBuffer);
-    {
-        C4Painter p(mPrimaryBuffer,new Stereocamera(0,0,120,mStereoEyeSeparation/2.0 * mStereoEffect));
-
-        // p.setColorMatrix(1,0,0,0,0,0,0,0,0);             // Color Anaglyphs
-        // p.setColorMatrix(0,0.7,0.3,0,0,0,0,0,0);         // Optimized Anaglyphs
-        // p.setColorMatrix(0.299,0.587,0.114,0,0,0,0,0,0);
-        p.setColorMatrix(0.299,0.587,0.114,0,0,0,0,0,0);    // Half Color/Gray/True Anaglyphs
-
-        foreach(C4Shape *s, mShapes)
-            s->render(&p,frameIndex);
-    }
-    {
-        C4Painter p(mSecondBuffer,new Stereocamera(0,0,120,-mStereoEyeSeparation/2.0 * mStereoEffect));
-
-        p.setColorMask(false,true,true);
-        // p.setColorMatrix(0.0,0.0,0.0,0.299,0.587,0.114,0.299,0.587,0.114); // Gray Anaglyphs
-        // p.setColorMatrix(0.0,0.0,0.0,0.0,0.0,0.0,0.299,0.587,0.114); // True Anaglyphs
-
-        foreach(C4Shape *s, mShapes)
-            s->render(&p,frameIndex);
-    }
-    *mPrimaryBuffer + *mSecondBuffer;
-    QImage result = mPrimaryBuffer->toImage();
-
-    if (img)
-        *img = result;
-    emit rendered(frameIndex, result);
-    emit renderingEnded();
+    if (mOutDevice->isStereo())
+        singleShot3d(img,frameIndex);
+    else
+        singleShot2d(img,frameIndex);
 }
 
 //-----------------------------------------------------------------------------
@@ -121,6 +92,12 @@ C4Shape *C4Scene::shapeById(int id) const
             return mShapes.at(i);
     }
     return NULL;
+}
+
+//-----------------------------------------------------------------------------
+C4OutDevice *C4Scene::device() const
+{
+    return mOutDevice;
 }
 
 //-----------------------------------------------------------------------------
@@ -153,6 +130,83 @@ void C4Scene::applyLeftFrustum(C4FrameBuffer *buffer)
     right   =  c * nearClippingDistance/convergence;
 
     buffer->setFrustum(left, right, bottom, top, nearClippingDistance, 10000);
+}
+
+//-----------------------------------------------------------------------------
+void C4Scene::setOutDevice(C4OutDevice *dev)
+{
+    if (mOutDevice)
+        delete mOutDevice;
+    mOutDevice = dev;
+    Q_ASSERT(mOutDevice);
+}
+
+//-----------------------------------------------------------------------------
+void C4Scene::singleShot2d(QImage *img, int frameIndex)
+{
+    emit renderingStarted();
+    emit preRender(frameIndex);
+    mPrimaryBuffer->reset();
+
+    applyLeftFrustum(mPrimaryBuffer);
+
+    C4Painter p(mPrimaryBuffer,new Stereocamera(0,0,120,mStereoEyeSeparation/2.0 * mStereoEffect));
+
+    foreach(C4Shape *s, mShapes)
+        s->render(&p,frameIndex);
+
+    QImage result = mPrimaryBuffer->toImage();
+
+    if (img)
+        *img = result;
+    emit rendered(frameIndex, result);
+    emit renderingEnded();
+}
+
+//-----------------------------------------------------------------------------
+void C4Scene::singleShot3d(QImage *img, int frameIndex)
+{
+    emit renderingStarted();
+    emit preRender(frameIndex);
+    mPrimaryBuffer->reset();
+    mSecondBuffer->reset();
+
+    // http://www.3dtv.at/knowhow/anaglyphcomparison_en.aspx
+    // http://www.animesh.me/2011/05/rendering-3d-anaglyph-in-opengl.html
+    // http://paulbourke.net/stereographics/stereorender/
+
+    // parallel axis asymmetric frustum perspective projection
+
+    applyLeftFrustum(mPrimaryBuffer);
+    applyRightFrustum(mSecondBuffer);
+    {
+        C4Painter p(mPrimaryBuffer,new Stereocamera(0,0,120,mStereoEyeSeparation/2.0 * mStereoEffect));
+
+        // p.setColorMatrix(1,0,0,0,0,0,0,0,0);             // Color Anaglyphs
+        // p.setColorMatrix(0,0.7,0.3,0,0,0,0,0,0);         // Optimized Anaglyphs
+        // p.setColorMatrix(0.299,0.587,0.114,0,0,0,0,0,0);
+        // p.setColorMatrix(0.299,0.587,0.114,0,0,0,0,0,0);    // Half Color/Gray/True Anaglyphs
+
+        foreach(C4Shape *s, mShapes)
+            s->render(&p,frameIndex);
+    }
+    {
+        C4Painter p(mSecondBuffer,new Stereocamera(0,0,120,-mStereoEyeSeparation/2.0 * mStereoEffect));
+
+        // p.setColorMask(false,true,true);
+        // p.setColorMatrix(0.0,0.0,0.0,0.299,0.587,0.114,0.299,0.587,0.114); // Gray Anaglyphs
+        // p.setColorMatrix(0.0,0.0,0.0,0.0,0.0,0.0,0.299,0.587,0.114); // True Anaglyphs
+
+        foreach(C4Shape *s, mShapes)
+            s->render(&p,frameIndex);
+    }
+
+    QImage result = mOutDevice->appendFrame(mPrimaryBuffer,mSecondBuffer);
+
+    if (img)
+        *img = result;
+    emit rendered(frameIndex, result);
+    emit renderingEnded();
 }
 
 //-----------------------------------------------------------------------------
