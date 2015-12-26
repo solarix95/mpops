@@ -2,7 +2,7 @@
 #define MAINVIEW_H
 
 #include <QWidget>
-#include "ui_mainform.h"
+#include "ui_render.h"
 
 #include <QTimer>
 #include <QImage>
@@ -10,11 +10,11 @@
 #include "render/c4scene.h"
 
 
-class Mainview : public QWidget
+class Render : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Mainview(C4Scene *scene, QWidget *parent = 0);
+    explicit Render(C4Scene *scene, QWidget *parent = 0);
     
 signals:
     void renderRequest(int frame);
@@ -27,6 +27,8 @@ private slots:
     void renderingStarted();
     void renderingDone(int index, QImage &img);
     void renderingEnded();
+    void updateSettings();
+    void applySettings();
 
 private:
     Ui::Widget ui;
